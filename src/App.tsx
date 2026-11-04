@@ -175,13 +175,7 @@ function Hero() {
           </a>
         </div>
       </div>
-      <a
-        className="hero-scroll"
-        href="#how-it-works"
-        aria-label="Scroll to how GreenWallet works"
-      >
-        <span />
-      </a>
+
     </section>
   );
 }
