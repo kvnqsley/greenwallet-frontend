@@ -1,4 +1,4 @@
-const CACHE_NAME = "greenwallet-shell-v3";
+const CACHE_NAME = "greenwallet-shell-v4";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -22,6 +22,9 @@ const APP_SHELL = [
   "/assets/imgverified.svg",
   "/assets/imgframe5.svg",
   "/assets/imgframe6.svg",
+  "/assets/auth-logo-signup.svg",
+  "/assets/auth-logo-signin.svg",
+  "/assets/auth-logo-verification.svg",
 ];
 
 self.addEventListener("install", (event) => {

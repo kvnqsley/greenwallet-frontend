@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { AuthPage, isAuthPath } from "./AuthPages";
 
 const ASSETS = "/assets/";
 
@@ -140,10 +141,10 @@ function Header() {
           ))}
         </div>
         <div className="nav-actions">
-          <a className="sign-in" href="#contact" onClick={closeMenu}>
+          <a className="sign-in" href="/sign-in" onClick={closeMenu}>
             Sign in
           </a>
-          <a className="sign-up" href="#contact" onClick={closeMenu}>
+          <a className="sign-up" href="/sign-up" onClick={closeMenu}>
             Sign up
           </a>
         </div>
@@ -436,6 +437,23 @@ export function App() {
     };
   }, []);
 
+  if (!isAuthPath(window.location.pathname)) {
+    return (
+      <>
+        <HomePage />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <AuthPage />
+      <NetworkStatus />
+    </>
+  );
+}
+
+function HomePage() {
   return (
     <>
       <a className="skip-link" href="#main">
@@ -449,7 +467,6 @@ export function App() {
         <ApproachSection />
         <ContactSection />
       </main>
-      <NetworkStatus />
       <Footer />
     </>
   );
