@@ -191,6 +191,7 @@ export function RecordTradePage() {
       // Backend expects unitPriceMinor as a string representation of minor units (e.g. kobo/cents)
       const unitPrice = totalNum / qtyNum;
       const unitPriceMinor = Math.round(unitPrice * 100).toString();
+      const expectedTotalMinor = Math.round(totalNum * 100).toString();
 
       // Creator is unconditionally the BUYER; Counterparty is unconditionally the SUPPLIER
       const buyerOrgId = myOrgId;
@@ -204,6 +205,7 @@ export function RecordTradePage() {
         quantity: quantity.toString(),
         unit: weightUnit,
         unitPriceMinor,
+        expectedTotalMinor,
         currency,
         deliveryLocation: deliveryLocation.trim() || null,
         terms: terms.trim() || null,

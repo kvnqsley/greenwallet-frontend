@@ -295,7 +295,7 @@ export function TradeTicketsPage() {
               <div className="ticket-empty-state">Loading trade tickets...</div>
             ) : tickets.length === 0 ? (
               <div className="ticket-empty-state">
-                No trade tickets found matching your query. Click "+ New Trade Ticket" to create one.
+                No trade tickets found matching your query.
               </div>
             ) : (
               <table className="ticket-table">

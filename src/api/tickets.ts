@@ -82,6 +82,7 @@ export interface CreateTicketRequest {
   quantity: string;
   unit: string;
   unitPriceMinor: string;
+  expectedTotalMinor: string;
   currency?: string;
   deliveryTerms?: string | null;
   deliveryLocation?: string | null;

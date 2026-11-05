@@ -114,7 +114,7 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
           email,
           password,
           organizationName,
-          organizationType: "BUSINESS",
+          organizationType: accountType.toUpperCase() as "BUSINESS" | "INDIVIDUAL",
           roles: ["EXPORTER"],
         });
 
