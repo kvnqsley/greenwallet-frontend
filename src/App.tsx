@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { AuthPage, isAuthPath } from "./AuthPages";
+import { IdentityVerificationPage } from "./IdentityVerificationPage";
+import { isIdentityVerified } from "./identity";
 import { RecordTradePage } from "./RecordTradePage";
+import {
+  ReviewTradeTicketPage,
+  TradeDecisionResultPage,
+} from "./TicketFlowPages";
 import { TradeTicketsPage } from "./TradeTicketsPage";
 
 const ASSETS = "/assets/";
@@ -445,10 +451,64 @@ export function App() {
   }
 
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  if (path === "/verify-identity" || path === "/kyc-verification") {
+    return (
+      <>
+        <IdentityVerificationPage />
+        <NetworkStatus />
+      </>
+    );
+  }
+
   if (path === "/record-trade") {
+    if (!isIdentityVerified()) {
+      return (
+        <>
+          <IdentityVerificationPage returnTo="/record-trade" />
+          <NetworkStatus />
+        </>
+      );
+    }
+
     return (
       <>
         <RecordTradePage />
+        <NetworkStatus />
+      </>
+    );
+  }
+
+  if (path === "/trade-tickets/review") {
+    if (!isIdentityVerified()) {
+      return (
+        <>
+          <IdentityVerificationPage returnTo="/trade-tickets/review" />
+          <NetworkStatus />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <ReviewTradeTicketPage />
+        <NetworkStatus />
+      </>
+    );
+  }
+
+  if (path === "/trade-tickets/accepted") {
+    return (
+      <>
+        <TradeDecisionResultPage decision="accepted" />
+        <NetworkStatus />
+      </>
+    );
+  }
+
+  if (path === "/trade-tickets/rejected") {
+    return (
+      <>
+        <TradeDecisionResultPage decision="rejected" />
         <NetworkStatus />
       </>
     );

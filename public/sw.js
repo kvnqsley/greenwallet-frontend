@@ -1,4 +1,4 @@
-const CACHE_NAME = "greenwallet-shell-v6";
+const CACHE_NAME = "greenwallet-shell-v8";
 const APP_SHELL = [
   "/",
   "/index.html",

@@ -1,4 +1,3 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   authStorage,
   loginApi,
@@ -7,6 +6,12 @@ import {
   verifyEmailApi,
   type PublicUser,
 } from "./api/auth";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  getAccountType,
+  setAccountType,
+  type AccountType,
+} from "./identity";
 
 type AuthPageMode = "sign-in" | "sign-up";
 
@@ -70,6 +75,9 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
   const copy = authCopy[mode];
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [accountType, setSelectedAccountType] = useState<AccountType>(() =>
+    getAccountType(),
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -135,17 +143,35 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       {mode === "sign-up" && (
-        <label className="auth-field">
-          <span>Name</span>
-          <input
-            type="text"
-            name="name"
-            autoComplete="name"
-            maxLength={100}
-            required
-            disabled={loading}
-          />
-        </label>
+
+        <>
+          <label className="auth-field">
+            <span>Name</span>
+            <input
+              type="text"
+              name="name"
+              autoComplete="name"
+              maxLength={100}
+              required
+            />
+          </label>
+          <label className="auth-field">
+            <span>Account type</span>
+            <select
+              name="accountType"
+              value={accountType}
+              onChange={(event) => {
+                const nextAccountType = event.target.value as AccountType;
+                setSelectedAccountType(nextAccountType);
+                setAccountType(nextAccountType);
+              }}
+              required
+            >
+              <option value="individual">Individual</option>
+              <option value="business">Business</option>
+            </select>
+          </label>
+        </>
       )}
       <label className="auth-field">
         <span>Email address</span>

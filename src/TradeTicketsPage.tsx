@@ -100,7 +100,7 @@ export function TradeTicketsPage() {
     // Fetch current user and org context
     getMeApi()
       .then((data) => setMe(data))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -212,9 +212,8 @@ export function TradeTicketsPage() {
           onProfile={() =>
             alert(
               me?.user
-                ? `Signed in as: ${me.user.name} (${me.user.email})\nOrganization: ${
-                    me.memberships[0]?.organization?.name || "None"
-                  }`
+                ? `Signed in as: ${me.user.name} (${me.user.email})\nOrganization: ${me.memberships[0]?.organization?.name || "None"
+                }`
                 : "No active profile found."
             )
           }
@@ -262,8 +261,34 @@ export function TradeTicketsPage() {
           {error && (
             <div style={{ marginTop: "20px", color: "#dc2626", fontSize: "14px" }}>
               {error}
-            </div>
-          )}
+            </div>)}
+          <section className="workspace-cards" aria-label="Workspace information">
+            <article className="workspace-info-card">
+              <h2>Trade tickets</h2>
+              <p>Create a record or reopen a ticket shared with you</p>
+              <a className="workspace-card-action" href="/trade-tickets/review">
+                Review shared ticket
+              </a>
+            </article>
+            <article className="workspace-info-card">
+              <h2>Identity verification is required</h2>
+              <p>
+                Individual and business accounts verify with different details
+                before opening a trade ticket.
+              </p>
+            </article>
+          </section>
+
+          <p className="workspace-preview-note">
+            Preview only. Sign-in, profile management, and trade ticket services
+            are not connected. Identity checks use a dummy service; entered
+            identity details are not sent or stored.
+          </p>
+          {/* {notice && (
+            <p className="workspace-notice" role="status" aria-live="polite">
+              {noticeCopy[notice]}
+            </p>
+          )} */}
 
           <div className="ticket-table-container">
             {loading ? (
