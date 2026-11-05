@@ -95,7 +95,7 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
           if (!response.user.emailVerifiedAt) {
             window.location.href = "/verify-email";
           } else {
-            window.location.href = "/";
+            window.location.href = "/trade-tickets";
           }
         }, 1000);
       } else {

@@ -1,8 +1,20 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, useEffect, type FormEvent, type ReactNode } from "react";
 import { WorkspaceHeader, WorkspaceNavigation } from "./TradeTicketsPage";
+import {
+  createTicketApi,
+  createMilestoneApi,
+  searchOrganizationsApi,
+  getMeApi,
+  type OrganizationSummary,
+  type UserMeResponse,
+} from "./api/tickets";
+import { authStorage } from "./api/auth";
 
 type Milestone = {
   id: number;
+  title: string;
+  targetDate: string;
+  details: string;
 };
 
 function RecordTradeField({
@@ -56,79 +68,190 @@ function RecordTradeSection({
   );
 }
 
-function MilestoneFields({
-  milestone,
-  index,
-  canRemove,
-  onRemove,
-}: {
-  milestone: Milestone;
-  index: number;
-  canRemove: boolean;
-  onRemove: (id: number) => void;
-}) {
-  return (
-    <div className="record-trade-milestone" key={milestone.id}>
-      <div className="record-trade-milestone-fields">
-        <RecordTradeField label={`Step ${index + 1}`}>
-          <input
-            type="text"
-            name={`milestones[${milestone.id}].step`}
-            maxLength={120}
-            placeholder="E.g. Quality inspection"
-          />
-        </RecordTradeField>
-        <RecordTradeField label={`Target date for step ${index + 1}`}>
-          <input
-            type="date"
-            name={`milestones[${milestone.id}].targetDate`}
-          />
-        </RecordTradeField>
-      </div>
-      <RecordTradeField label={`Details for step ${index + 1} (optional)`}>
-        <textarea
-          name={`milestones[${milestone.id}].details`}
-          maxLength={1000}
-          placeholder="Details the parties agreed on"
-        />
-      </RecordTradeField>
-      {canRemove && (
-        <button
-          className="record-trade-remove-milestone"
-          type="button"
-          onClick={() => onRemove(milestone.id)}
-        >
-          Remove step {index + 1}
-        </button>
-      )}
-    </div>
-  );
-}
-
 export function RecordTradePage() {
-  const [milestones, setMilestones] = useState<Milestone[]>([{ id: 0 }]);
+  const [milestones, setMilestones] = useState<Milestone[]>([
+    { id: 0, title: "", targetDate: "", details: "" },
+  ]);
   const [notice, setNotice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // User and organization state
+  const [me, setMe] = useState<UserMeResponse | null>(null);
+  const [myRole, setMyRole] = useState<"BUYER" | "SUPPLIER">("BUYER");
+
+  // Counterparty search state
+  const [counterpartySearch, setCounterpartySearch] = useState("");
+  const [searchResults, setSearchResults] = useState<OrganizationSummary[]>([]);
+  const [selectedCounterparty, setSelectedCounterparty] = useState<OrganizationSummary | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Form inputs
+  const [commodity, setCommodity] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [weightUnit, setWeightUnit] = useState("tonnes");
+  const [currency, setCurrency] = useState("NGN");
+  const [totalValue, setTotalValue] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [terms, setTerms] = useState("");
+
+  useEffect(() => {
+    getMeApi()
+      .then((data) => {
+        setMe(data);
+        if (data.memberships.length > 0) {
+          const userOrgRoles = data.memberships[0]?.organization?.roles || [];
+          if (userOrgRoles.includes("SUPPLIER") && !userOrgRoles.includes("BUYER")) {
+            setMyRole("SUPPLIER");
+          }
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
+
+  // Search counterparties with debounce
+  useEffect(() => {
+    if (!counterpartySearch.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await searchOrganizationsApi(counterpartySearch);
+        // Exclude current user's organization from counterparty choices
+        const currentOrgId = me?.memberships[0]?.organization?.id;
+        setSearchResults(results.filter((o) => o.id !== currentOrgId));
+        setShowDropdown(true);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [counterpartySearch, me]);
 
   function addMilestone() {
     setMilestones((current) => [
       ...current,
-      { id: Math.max(-1, ...current.map(({ id }) => id)) + 1 },
+      {
+        id: Math.max(-1, ...current.map(({ id }) => id)) + 1,
+        title: "",
+        targetDate: "",
+        details: "",
+      },
     ]);
-    setNotice("");
   }
 
   function removeMilestone(id: number) {
     setMilestones((current) =>
       current.filter((milestone) => milestone.id !== id),
     );
-    setNotice("");
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setNotice(
-      "Draft preview only. Nothing has been saved or shared. Trade services are not connected.",
+  function updateMilestone(id: number, field: keyof Milestone, value: string) {
+    setMilestones((current) =>
+      current.map((m) => (m.id === id ? { ...m, [field]: value } : m))
     );
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setNotice("");
+
+    const myOrgId = me?.memberships[0]?.organization?.id;
+    if (!myOrgId) {
+      setNotice("You must belong to an organization to record a trade. Please ensure your account has an organization setup.");
+      return;
+    }
+
+    if (!selectedCounterparty) {
+      setNotice("Please search and select a counterparty organization.");
+      return;
+    }
+
+    if (!commodity.trim()) {
+      setNotice("Please specify the commodity name.");
+      return;
+    }
+
+    const qtyNum = parseFloat(quantity);
+    if (isNaN(qtyNum) || qtyNum <= 0) {
+      setNotice("Please enter a valid positive quantity.");
+      return;
+    }
+
+    const totalNum = parseFloat(totalValue);
+    if (isNaN(totalNum) || totalNum <= 0) {
+      setNotice("Please enter a valid total trade value.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Backend expects unitPriceMinor as a string representation of minor units (e.g. kobo/cents)
+      // unitPrice = total / quantity
+      const unitPrice = totalNum / qtyNum;
+      const unitPriceMinor = Math.round(unitPrice * 100).toString();
+
+      const buyerOrgId = myRole === "BUYER" ? myOrgId : selectedCounterparty.id;
+      const supplierOrgId = myRole === "SUPPLIER" ? myOrgId : selectedCounterparty.id;
+
+      const created = await createTicketApi({
+        buyerOrgId,
+        supplierOrgId,
+        commodity: commodity.trim(),
+        quantity: quantity.toString(),
+        unit: weightUnit,
+        unitPriceMinor,
+        currency,
+        deliveryLocation: deliveryLocation.trim() || null,
+        terms: terms.trim() || null,
+      });
+
+      // If milestones were defined with titles, add them to the ticket
+      const validMilestones = milestones.filter((m) => m.title.trim().length > 0);
+      if (validMilestones.length > 0) {
+        const bpPerMilestone = Math.floor(10000 / validMilestones.length);
+        for (let i = 0; i < validMilestones.length; i++) {
+          const m = validMilestones[i];
+          const releaseBp =
+            i === validMilestones.length - 1
+              ? 10000 - bpPerMilestone * (validMilestones.length - 1)
+              : bpPerMilestone;
+
+          await createMilestoneApi(created.id, {
+            title: m.title.trim(),
+            description: m.details.trim() || null,
+            dueDate: m.targetDate || null,
+            releaseBp,
+          });
+        }
+      }
+
+      setNotice(`Trade ticket ${created.reference} created successfully! Redirecting...`);
+      setTimeout(() => {
+        window.location.href = "/trade-tickets";
+      }, 1500);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setNotice(err.message);
+      } else {
+        setNotice("Failed to save trade ticket.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function handleSignOut() {
+    authStorage.clearSession();
+    window.location.href = "/sign-in";
   }
 
   return (
@@ -136,74 +259,114 @@ export function RecordTradePage() {
       <a className="skip-link" href="#workspace-main">
         Skip to content
       </a>
-      <WorkspaceHeader
-        onSignOut={() =>
-          setNotice(
-            "There is no signed-in account in this preview. Use the GreenWallet logo to return home.",
-          )
-        }
-      />
+      <WorkspaceHeader onSignOut={handleSignOut} />
       <div className="workspace-layout">
         <WorkspaceNavigation
           onProfile={() =>
-            setNotice(
-              "Profile management is not connected in this preview. No account details are available.",
+            alert(
+              me?.user
+                ? `Signed in as: ${me.user.name} (${me.user.email})\nOrganization: ${
+                    me.memberships[0]?.organization?.name || "None"
+                  }`
+                : "No profile loaded."
             )
           }
         />
-        <main
-          className="workspace-main record-trade-main"
-          id="workspace-main"
-        >
-          <section
-            className="record-trade-intro"
-            aria-labelledby="record-trade-title"
-          >
+        <main className="workspace-main record-trade-main" id="workspace-main">
+          <section className="record-trade-intro" aria-labelledby="record-trade-title">
             <p className="workspace-eyebrow">Trade record Nigeria</p>
             <h1 id="record-trade-title">Record a trade</h1>
             <p className="workspace-description">
-              Enter the terms agreed by the trade parties. New records start as
-              drafts.
+              Enter the terms agreed by the trade parties. New records start as drafts.
             </p>
           </section>
 
           <form className="record-trade-form" onSubmit={handleSubmit}>
             <RecordTradeSection
               title="Trade Parties"
-              description="Name the counterparty who can view this ticket."
+              description="Name your role and select the counterparty organization."
             >
               <div className="record-trade-parties-grid">
-                <RecordTradeField label="Ticket name">
-                  <input
-                    type="text"
-                    name="ticketName"
-                    autoComplete="off"
-                    maxLength={160}
-                    placeholder="E.g. Maize supply to Lagos"
-                  />
-                </RecordTradeField>
-                <RecordTradeField label="Your role">
-                  <select name="role" defaultValue="buyer">
-                    <option value="buyer">Buyer</option>
-                    <option value="seller">Seller</option>
-                    <option value="supplier">Supplier</option>
-                    <option value="exporter">Exporter</option>
-                    <option value="aggregator">Aggregator</option>
+                <RecordTradeField label="Your Organization Role">
+                  <select
+                    value={myRole}
+                    onChange={(e) => setMyRole(e.target.value as "BUYER" | "SUPPLIER")}
+                  >
+                    <option value="BUYER">Buyer (I am purchasing)</option>
+                    <option value="SUPPLIER">Supplier (I am supplying)</option>
                   </select>
+                  {me?.memberships[0]?.organization && (
+                    <span className="record-trade-field-hint">
+                      Operating as: <strong>{me.memberships[0].organization.name}</strong>
+                    </span>
+                  )}
                 </RecordTradeField>
               </div>
+
               <div className="record-trade-counterparty">
                 <RecordTradeField
-                  label="Counterparty account"
-                  hint="Account search is not connected in this preview."
+                  label="Counterparty organization (Search by Name)"
+                  hint="Type 1 or more letters to search registered organizations"
                 >
-                  <input
-                    type="text"
-                    name="counterparty"
-                    autoComplete="off"
-                    maxLength={254}
-                    placeholder="Search by name"
-                  />
+                  <div className="autocomplete-container">
+                    <input
+                      type="text"
+                      autoComplete="off"
+                      maxLength={254}
+                      placeholder="Type counterparty organization name..."
+                      value={counterpartySearch}
+                      onChange={(e) => {
+                        setCounterpartySearch(e.target.value);
+                        if (selectedCounterparty && e.target.value !== selectedCounterparty.name) {
+                          setSelectedCounterparty(null);
+                        }
+                      }}
+                      onFocus={() => {
+                        if (searchResults.length > 0) setShowDropdown(true);
+                      }}
+                    />
+                    {isSearching && (
+                      <span style={{ fontSize: "12px", color: "#666", marginTop: "4px", display: "block" }}>
+                        Searching...
+                      </span>
+                    )}
+
+                    {showDropdown && searchResults.length > 0 && (
+                      <ul className="autocomplete-dropdown">
+                        {searchResults.map((org) => (
+                          <li
+                            key={org.id}
+                            className="autocomplete-item"
+                            onClick={() => {
+                              setSelectedCounterparty(org);
+                              setCounterpartySearch(org.name);
+                              setShowDropdown(false);
+                            }}
+                          >
+                            <strong>{org.name}</strong>
+                            <span>Type: {org.type || "BUSINESS"} | Country: {org.country || "NG"}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {selectedCounterparty && (
+                    <div className="selected-counterparty-badge">
+                      <span>
+                        Selected: <strong>{selectedCounterparty.name}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCounterparty(null);
+                          setCounterpartySearch("");
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </RecordTradeField>
               </div>
             </RecordTradeSection>
@@ -216,70 +379,73 @@ export function RecordTradePage() {
                 <RecordTradeField label="Commodity">
                   <input
                     type="text"
-                    name="commodity"
+                    required
                     maxLength={120}
-                    placeholder="E.g. Maize"
+                    placeholder="E.g. Maize, Cocoa, Soybeans"
+                    value={commodity}
+                    onChange={(e) => setCommodity(e.target.value)}
                   />
                 </RecordTradeField>
                 <RecordTradeField label="Quantity">
                   <input
                     type="number"
-                    name="quantity"
+                    required
                     min="0"
                     step="any"
                     placeholder="E.g. 25"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
                   />
                 </RecordTradeField>
-                <RecordTradeField label="Weight">
-                  <select name="weightUnit" defaultValue="">
-                    <option value="" disabled>
-                      Select unit
-                    </option>
-                    <option value="kg">kg</option>
+                <RecordTradeField label="Weight unit">
+                  <select
+                    value={weightUnit}
+                    onChange={(e) => setWeightUnit(e.target.value)}
+                  >
                     <option value="tonnes">tonnes</option>
+                    <option value="kg">kg</option>
+                    <option value="bags">bags</option>
                   </select>
                 </RecordTradeField>
               </div>
 
               <div className="record-trade-value-grid">
                 <div className="record-trade-value-field">
-                  <span className="record-trade-field-label">
-                    Agreed total value
-                  </span>
+                  <span className="record-trade-field-label">Agreed total value</span>
                   <div className="record-trade-money-fields">
                     <label className="visually-hidden" htmlFor="trade-currency">
                       Currency
                     </label>
                     <select
                       id="trade-currency"
-                      name="currency"
-                      defaultValue="NGN"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
                     >
                       <option value="NGN">NGN</option>
                       <option value="USD">USD</option>
                     </select>
-                    <label
-                      className="visually-hidden"
-                      htmlFor="trade-total-value"
-                    >
+                    <label className="visually-hidden" htmlFor="trade-total-value">
                       Total value
                     </label>
                     <input
                       id="trade-total-value"
                       type="number"
-                      name="totalValue"
+                      required
                       min="0"
                       step="any"
                       placeholder="E.g. 1200000"
+                      value={totalValue}
+                      onChange={(e) => setTotalValue(e.target.value)}
                     />
                   </div>
                 </div>
                 <RecordTradeField label="Delivery location">
                   <input
                     type="text"
-                    name="deliveryLocation"
                     maxLength={160}
-                    placeholder="E.g. Lagos"
+                    placeholder="E.g. Lagos, Kano, Port Harcourt"
+                    value={deliveryLocation}
+                    onChange={(e) => setDeliveryLocation(e.target.value)}
                   />
                 </RecordTradeField>
               </div>
@@ -287,9 +453,10 @@ export function RecordTradePage() {
               <RecordTradeField label="Terms and specifications">
                 <textarea
                   className="record-trade-terms-textarea"
-                  name="terms"
                   maxLength={2000}
-                  placeholder="Record grade, packaging, delivery, terms, inspection arrangements, and other details agreed for this transaction"
+                  placeholder="Record grade, packaging, delivery terms, inspection arrangements, and other details"
+                  value={terms}
+                  onChange={(e) => setTerms(e.target.value)}
                 />
               </RecordTradeField>
             </RecordTradeSection>
@@ -309,31 +476,77 @@ export function RecordTradePage() {
             >
               <div className="record-trade-milestones">
                 {milestones.map((milestone, index) => (
-                  <MilestoneFields
-                    key={milestone.id}
-                    milestone={milestone}
-                    index={index}
-                    canRemove={milestones.length > 1}
-                    onRemove={removeMilestone}
-                  />
+                  <div className="record-trade-milestone" key={milestone.id}>
+                    <div className="record-trade-milestone-fields">
+                      <RecordTradeField label={`Step ${index + 1}`}>
+                        <input
+                          type="text"
+                          maxLength={120}
+                          placeholder="E.g. Quality inspection / Delivery"
+                          value={milestone.title}
+                          onChange={(e) =>
+                            updateMilestone(milestone.id, "title", e.target.value)
+                          }
+                        />
+                      </RecordTradeField>
+                      <RecordTradeField label={`Target date for step ${index + 1}`}>
+                        <input
+                          type="date"
+                          value={milestone.targetDate}
+                          onChange={(e) =>
+                            updateMilestone(milestone.id, "targetDate", e.target.value)
+                          }
+                        />
+                      </RecordTradeField>
+                    </div>
+                    <RecordTradeField label={`Details for step ${index + 1} (optional)`}>
+                      <textarea
+                        maxLength={1000}
+                        placeholder="Details agreed for this milestone"
+                        value={milestone.details}
+                        onChange={(e) =>
+                          updateMilestone(milestone.id, "details", e.target.value)
+                        }
+                      />
+                    </RecordTradeField>
+                    {milestones.length > 1 && (
+                      <button
+                        className="record-trade-remove-milestone"
+                        type="button"
+                        onClick={() => removeMilestone(milestone.id)}
+                      >
+                        Remove step {index + 1}
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </RecordTradeSection>
 
-            <p className="record-trade-preview-note">
-              Preview only. This draft is not saved or shared with participants.
-            </p>
             {notice && (
-              <p className="record-trade-notice" role="status" aria-live="polite">
+              <p
+                className="record-trade-notice"
+                role="status"
+                aria-live="polite"
+                style={{
+                  color: notice.includes("successfully") ? "var(--green)" : "#dc2626",
+                  fontWeight: 500,
+                }}
+              >
                 {notice}
               </p>
             )}
+
             <div className="record-trade-actions">
               <a className="record-trade-cancel" href="/trade-tickets">
                 Cancel
               </a>
-              <button className="record-trade-save" type="submit">
-                Save draft
+              <button
+                className="record-trade-save"
+                type="submit"
+                disabled={submitting}
+              >
+                {submitting ? "Saving..." : "Save draft ticket"}
               </button>
             </div>
           </form>
