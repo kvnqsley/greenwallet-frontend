@@ -1,4 +1,12 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  authStorage,
+  loginApi,
+  registerApi,
+  resendVerificationApi,
+  verifyEmailApi,
+  type PublicUser,
+} from "./api/auth";
 
 type AuthPageMode = "sign-in" | "sign-up";
 
@@ -61,12 +69,67 @@ function AuthHeader({ mode }: { mode: AuthPageMode }) {
 function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
   const copy = authCopy[mode];
   const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice(
-      "Authentication isn’t connected in this preview. Your information was not sent or stored.",
-    );
+    setNotice("");
+    setLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") || "").trim();
+    const password = String(formData.get("password") || "");
+    const name = String(formData.get("name") || "").trim();
+
+    try {
+      if (mode === "sign-in") {
+        const response = await loginApi({ email, password });
+        authStorage.saveSession({
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: response.user,
+        });
+
+        setNotice("Sign in successful! Redirecting...");
+        setTimeout(() => {
+          if (!response.user.emailVerifiedAt) {
+            window.location.href = "/verify-email";
+          } else {
+            window.location.href = "/";
+          }
+        }, 1000);
+      } else {
+        // Derive organization defaults from the user's name
+        const organizationName = `${name}'s Organization`;
+        const response = await registerApi({
+          name,
+          email,
+          password,
+          organizationName,
+          organizationType: "BUSINESS",
+          roles: ["EXPORTER"],
+        });
+
+        authStorage.saveSession({
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: response.user,
+        });
+
+        setNotice("Account created! Redirecting to email verification...");
+        setTimeout(() => {
+          window.location.href = "/verify-email";
+        }, 1200);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setNotice(err.message);
+      } else {
+        setNotice("An error occurred. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -80,6 +143,7 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
             autoComplete="name"
             maxLength={100}
             required
+            disabled={loading}
           />
         </label>
       )}
@@ -91,6 +155,7 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
           autoComplete="email"
           maxLength={254}
           required
+          disabled={loading}
         />
       </label>
       <label className="auth-field">
@@ -104,6 +169,7 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
           minLength={mode === "sign-up" ? 8 : undefined}
           maxLength={128}
           required
+          disabled={loading}
         />
         {mode === "sign-up" && (
           <span className="auth-field-hint">
@@ -111,18 +177,13 @@ function AuthenticationForm({ mode }: { mode: AuthPageMode }) {
           </span>
         )}
       </label>
-      <button className="auth-submit" type="submit">
-        {copy.action}
+      <button className="auth-submit" type="submit" disabled={loading}>
+        {loading ? "Please wait..." : copy.action}
       </button>
       {notice && (
         <p className="auth-notice" role="status" aria-live="polite">
           {notice}
         </p>
-      )}
-      {mode === "sign-up" && (
-        <a className="auth-preview-link" href="/verify-email">
-          Preview email verification
-        </a>
       )}
     </form>
   );
@@ -178,12 +239,73 @@ function VerificationHeader() {
 }
 
 function EmailVerificationPage() {
+  const [currentUser, setCurrentUser] = useState<PublicUser | null>(null);
+  const [emailDisplay, setEmailDisplay] = useState<string>("Email address from your account");
+  const [initials, setInitials] = useState<string>("G");
   const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleResend() {
-    setNotice(
-      "Email verification isn’t connected in this preview. No email was sent.",
-    );
+  useEffect(() => {
+    const user = authStorage.getUser();
+    const pendingEmail = authStorage.getPendingEmail();
+
+    if (user) {
+      setCurrentUser(user);
+      setEmailDisplay(user.email);
+      setInitials(user.name ? user.name.charAt(0).toUpperCase() : "G");
+    } else if (pendingEmail) {
+      setEmailDisplay(pendingEmail);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+      setLoading(true);
+      verifyEmailApi(token)
+        .then((res) => {
+          setNotice("Email successfully verified! You can now sign in.");
+          if (user) {
+            authStorage.saveSession({
+              accessToken: authStorage.getAccessToken() || "",
+              refreshToken: authStorage.getRefreshToken() || "",
+              user: res.user,
+            });
+            setCurrentUser(res.user);
+          }
+        })
+        .catch((err: Error) => {
+          setNotice(err.message || "Failed to verify email.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, []);
+
+  async function handleResend() {
+    setNotice("");
+    setLoading(true);
+
+    const token = authStorage.getAccessToken();
+    if (!token) {
+      setNotice("Please sign in first to resend verification email.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await resendVerificationApi(token);
+      setNotice(res.message || "Verification link sent!");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setNotice(err.message);
+      } else {
+        setNotice("Failed to resend verification link.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -192,10 +314,9 @@ function EmailVerificationPage() {
       <div className="verification-content">
         <section className="verification-profile" aria-label="Account details">
           <div className="verification-avatar" aria-hidden="true">
-            G
           </div>
-          <h1>Your GreenWallet account</h1>
-          <p>Email address from your account</p>
+          <h1>{currentUser?.name || "Your GreenWallet account"}</h1>
+          <p>{emailDisplay}</p>
         </section>
         <section className="verification-card" aria-labelledby="verify-title">
           <h2 id="verify-title">Verify your email</h2>
@@ -207,17 +328,15 @@ function EmailVerificationPage() {
             className="verification-resend"
             type="button"
             onClick={handleResend}
+            disabled={loading}
           >
-            Resend verification link
+            {loading ? "Sending..." : "Resend verification link"}
           </button>
           {notice && (
             <p className="verification-notice" role="status" aria-live="polite">
               {notice}
             </p>
           )}
-          <a className="verification-return" href="/sign-up">
-            Return to create an account
-          </a>
         </section>
       </div>
     </main>
