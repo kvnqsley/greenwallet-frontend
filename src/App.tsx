@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AuthPage, isAuthPath } from "./AuthPages";
+import { RecordTradePage } from "./RecordTradePage";
+import { TradeTicketsPage } from "./TradeTicketsPage";
 
 const ASSETS = "/assets/";
 
@@ -166,7 +168,7 @@ function Hero() {
           first agreement to the final transaction step.
         </p>
         <div className="hero-actions">
-          <a className="button button-light" href="#contact">
+          <a className="button button-light" href="/trade-tickets">
             <span>Open trade workspace</span>
             <ArrowIcon />
           </a>
@@ -437,17 +439,37 @@ export function App() {
     };
   }, []);
 
-  if (!isAuthPath(window.location.pathname)) {
+  if (isAuthPath(window.location.pathname)) {
     return (
       <>
-        <HomePage />
+        <AuthPage />
+        <NetworkStatus />
+      </>
+    );
+  }
+
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  if (path === "/record-trade") {
+    return (
+      <>
+        <RecordTradePage />
+        <NetworkStatus />
+      </>
+    );
+  }
+
+  if (path === "/trade-tickets") {
+    return (
+      <>
+        <TradeTicketsPage />
+        <NetworkStatus />
       </>
     );
   }
 
   return (
     <>
-      <AuthPage />
+      <HomePage />
       <NetworkStatus />
     </>
   );

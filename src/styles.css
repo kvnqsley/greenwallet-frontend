@@ -239,6 +239,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
 .auth-alternate a:hover, .auth-preview-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .auth-preview-link { justify-self: center; font-size: 12px; }
 .auth-notice { margin: 0; color: #e8ffd2; font-size: 12px; line-height: 1.55; }
+.auth-preview-workspace { display: inline-block; margin-top: 16px; color: var(--lime); font-size: 14px; text-underline-offset: 3px; }
+.auth-preview-workspace:hover { color: white; }
 
 .verification-page { min-height: 100svh; background: #fff; color: var(--ink); }
 .verification-header { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 20px; padding: 12px clamp(20px, 3vw, 43px); border-bottom: 1px solid #dbdbdb; }
@@ -258,6 +260,32 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
 .verification-resend:hover { background: var(--green-deep); color: white; }
 .verification-notice { margin: 0; color: var(--green); font-size: 13px; line-height: 1.55; }
 .verification-return { justify-self: center; color: var(--green); font-size: 13px; text-underline-offset: 3px; }
+
+.workspace-page { min-height: 100svh; background: white; color: var(--ink); }
+.workspace-header { position: relative; z-index: 1; display: flex; min-height: 88px; align-items: center; justify-content: space-between; gap: 20px; padding: 18px clamp(20px, 3vw, 43px); border-bottom: 1px solid #dbdbdb; }
+.workspace-brand { display: inline-flex; align-items: center; gap: 11px; color: var(--ink); font-size: 16px; font-weight: 650; text-decoration: none; }
+.workspace-brand img { width: 36px; height: 36px; }
+.workspace-sign-out { min-width: 120px; min-height: 48px; padding: 10px 16px; border: 0; background: var(--green); color: #f9f8ef; font: inherit; font-size: 16px; cursor: pointer; }
+.workspace-sign-out:hover, .workspace-primary-action:hover { background: var(--green-deep); }
+.workspace-layout { display: grid; min-height: calc(100svh - 88px); grid-template-columns: 272px minmax(0, 1fr); }
+.workspace-sidebar { display: flex; flex-direction: column; gap: 22px; padding: 42px 14px; border-right: 1px solid #e5e5e5; }
+.workspace-nav-link { display: flex; min-height: 48px; align-items: center; gap: 8px; padding: 10px 16px; border: 0; background: transparent; color: rgb(29 29 29 / 90%); font: inherit; font-size: 20px; text-align: left; text-decoration: none; cursor: pointer; }
+.workspace-nav-link img { width: 24px; height: 24px; }
+.workspace-nav-link:hover { background: #f4f6f1; }
+.workspace-nav-link.is-current { color: var(--green); }
+.workspace-main { width: min(100% - 64px, 1063px); margin: 58px auto 80px; }
+.workspace-intro { max-width: 616px; }
+.workspace-eyebrow { margin: 0 0 24px; color: rgb(29 29 29 / 80%); font-size: 14px; font-weight: 550; letter-spacing: 1.2px; text-transform: uppercase; }
+.workspace-intro h1 { max-width: 603px; margin: 0; color: var(--ink); font-size: clamp(36px, 4vw, 48px); font-weight: 400; letter-spacing: -.035em; line-height: 1.2; text-wrap: pretty; }
+.workspace-description { max-width: 570px; margin: 8px 0 0; color: rgb(29 29 29 / 70%); font-size: 20px; line-height: 1.5; text-wrap: pretty; }
+.workspace-primary-action { min-height: 48px; margin-top: 56px; padding: 10px 18px; border: 0; background: var(--green); color: #f9f8ef; font: inherit; font-size: 16px; cursor: pointer; }
+.workspace-cards { display: grid; grid-template-columns: minmax(0, .88fr) minmax(0, 1fr); align-items: stretch; gap: 24px; margin-top: 72px; }
+.workspace-info-card { padding: 20px; border: 1px solid #e5e5e5; }
+.workspace-info-card h2 { margin: 0; color: rgb(29 29 29 / 90%); font-size: 24px; font-weight: 650; letter-spacing: -.015em; line-height: 1.4; text-wrap: pretty; }
+.workspace-info-card p { margin: 8px 0 0; color: rgb(29 29 29 / 70%); font-size: 18px; line-height: 1.5; text-wrap: pretty; }
+.workspace-preview-note, .workspace-notice { max-width: 780px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.workspace-preview-note { margin: 28px 0 0; }
+.workspace-notice { margin: 12px 0 0; color: var(--green); }
 
 @media (min-width: 1300px) {
   .auth-layout-sign-up { width: min(100% - 158px, 1294px); }
@@ -287,6 +315,18 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
   .auth-alternate { padding-top: 24px; }
   .verification-content { gap: 30px; margin-top: 40px; }
   .verification-card { padding: 30px 24px; border-radius: 22px; }
+  .workspace-layout { grid-template-columns: 1fr; }
+  .workspace-sidebar { flex-direction: row; gap: 8px; padding: 12px 20px; border-right: 0; border-bottom: 1px solid #e5e5e5; overflow-x: auto; }
+  .workspace-nav-link { flex: 0 0 auto; font-size: 16px; }
+  .workspace-main { width: min(100% - 40px, 650px); margin-top: 38px; }
+  .workspace-eyebrow { margin-bottom: 18px; font-size: 12px; }
+  .workspace-intro h1 { font-size: clamp(34px, 8vw, 46px); }
+  .workspace-description { font-size: 17px; }
+  .workspace-primary-action { margin-top: 32px; }
+  .workspace-cards { grid-template-columns: 1fr; gap: 12px; margin-top: 40px; }
+  .workspace-info-card { padding: 18px; }
+  .workspace-info-card h2 { font-size: 21px; }
+  .workspace-info-card p { font-size: 16px; }
 }
 
 @media (max-width: 380px) {
@@ -294,4 +334,87 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
   .auth-nav { gap: 4px; }
   .auth-nav-link { min-width: 78px; padding-inline: 8px; font-size: 13px; }
   .auth-layout, .auth-layout-sign-up, .auth-layout-sign-in { width: calc(100% - 32px); }
+  .workspace-header { min-height: 74px; padding-inline: 16px; }
+  .workspace-sign-out { min-width: 96px; min-height: 44px; padding-inline: 12px; font-size: 14px; }
+  .workspace-sidebar { padding-inline: 12px; }
+  .workspace-nav-link { padding-inline: 10px; font-size: 14px; }
+  .workspace-main { width: calc(100% - 32px); }
+}
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.workspace-primary-action { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.record-trade-main { width: min(882px, calc(100% - 120px)); margin: 58px 0 80px 74px; }
+.record-trade-intro { max-width: 616px; }
+.record-trade-intro .workspace-eyebrow { margin-bottom: 16px; }
+.record-trade-intro h1 { margin: 0; font-size: clamp(36px, 4vw, 48px); font-weight: 400; letter-spacing: -.035em; line-height: 1.2; }
+.record-trade-intro .workspace-description { margin-top: 8px; }
+.record-trade-form { display: grid; gap: 24px; margin-top: 30px; }
+.record-trade-section { display: grid; min-width: 0; gap: 22px; margin: 0; padding: 20px; border: 1px solid #e5e5e5; }
+.record-trade-section-heading { display: grid; gap: 2px; }
+.record-trade-section-heading h2 { margin: 0; color: rgb(29 29 29 / 62%); font-size: 16px; font-weight: 550; line-height: 1.5; }
+.record-trade-section-heading p { margin: 0; color: rgb(29 29 29 / 64%); font-size: 14px; line-height: 1.45; }
+.record-trade-section-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.record-trade-section-action { flex: 0 0 auto; }
+.record-trade-parties-grid { display: grid; max-width: 805px; grid-template-columns: minmax(0, 1fr) minmax(140px, .34fr); gap: clamp(20px, 11vw, 155px); align-items: start; }
+.record-trade-counterparty { width: min(100%, 487px); margin-top: -2px; }
+.record-trade-field { display: grid; min-width: 0; gap: 7px; color: rgb(29 29 29 / 90%); font-size: 14px; font-weight: 550; }
+.record-trade-field > input, .record-trade-field > select, .record-trade-field > textarea, .record-trade-money-fields > input, .record-trade-money-fields > select { width: 100%; min-width: 0; min-height: 48px; padding: 10px; border: 1px solid #e5e5e5; border-radius: 0; background-color: white; color: var(--ink); font: inherit; font-size: 14px; font-weight: 400; }
+.record-trade-field > select, .record-trade-money-fields > select { padding-right: 36px; appearance: none; background-image: url("/assets/icon-dropdown.svg"); background-position: right 6px center; background-repeat: no-repeat; background-size: 24px; }
+.record-trade-field > textarea { min-height: 108px; resize: vertical; line-height: 1.5; }
+.record-trade-field > input::placeholder, .record-trade-field > textarea::placeholder, .record-trade-money-fields > input::placeholder { color: rgb(29 29 29 / 54%); opacity: 1; }
+.record-trade-field > input:focus, .record-trade-field > select:focus, .record-trade-field > textarea:focus, .record-trade-money-fields > input:focus, .record-trade-money-fields > select:focus { border-color: var(--green); outline: 2px solid var(--green); outline-offset: 1px; }
+.record-trade-field-hint { color: var(--muted); font-size: 12px; font-weight: 400; line-height: 1.4; }
+.record-trade-terms-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, .55fr)); gap: 16px; align-items: end; }
+.record-trade-value-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.35fr); gap: 20px; align-items: end; }
+.record-trade-value-field { display: grid; min-width: 0; gap: 7px; }
+.record-trade-field-label { color: rgb(29 29 29 / 90%); font-size: 14px; font-weight: 550; }
+.record-trade-money-fields { display: grid; grid-template-columns: minmax(96px, .85fr) minmax(0, 1fr); gap: 4px; }
+.record-trade-money-fields > select { padding-left: 8px; padding-right: 30px; }
+.record-trade-terms-textarea { min-height: 108px !important; }
+.record-trade-milestones { display: grid; gap: 20px; }
+.record-trade-milestone { display: grid; gap: 16px; padding-top: 4px; }
+.record-trade-milestone + .record-trade-milestone { padding-top: 20px; border-top: 1px solid #e5e5e5; }
+.record-trade-milestone-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px; }
+.record-trade-add-milestone, .record-trade-save { min-height: 40px; padding: 9px 14px; border: 0; background: var(--green); color: #f9f8ef; font: inherit; font-size: 14px; cursor: pointer; }
+.record-trade-add-milestone:hover, .record-trade-save:hover { background: var(--green-deep); }
+.record-trade-remove-milestone { justify-self: start; padding: 4px 0; border: 0; background: transparent; color: var(--green); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.record-trade-preview-note, .record-trade-notice { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.record-trade-notice { color: var(--green); }
+.record-trade-actions { display: flex; justify-content: flex-end; gap: 11px; }
+.record-trade-cancel, .record-trade-save { display: inline-flex; width: 160px; min-height: 48px; align-items: center; justify-content: center; font: inherit; font-size: 14px; text-decoration: none; cursor: pointer; }
+.record-trade-cancel { border: 1px solid #e5e5e5; background: white; color: rgb(29 29 29 / 80%); }
+.record-trade-cancel:hover { background: #f6f7f5; }
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .record-trade-main { width: calc(100% - 64px); margin-left: 32px; }
+  .record-trade-parties-grid { gap: clamp(16px, 5vw, 56px); }
+  .record-trade-terms-grid { grid-template-columns: minmax(0, 1fr) repeat(2, minmax(105px, .55fr)); gap: 12px; }
+  .record-trade-milestone-fields { gap: 20px; }
+}
+
+@media (max-width: 760px) {
+  .record-trade-main { width: min(100% - 40px, 650px); margin: 38px auto 60px; }
+  .record-trade-intro h1 { font-size: clamp(34px, 8vw, 46px); }
+  .record-trade-intro .workspace-eyebrow { margin-bottom: 18px; }
+  .record-trade-form { gap: 16px; margin-top: 24px; }
+  .record-trade-section { gap: 18px; padding: 16px; }
+  .record-trade-section-heading p { font-size: 13px; }
+  .record-trade-parties-grid { max-width: none; grid-template-columns: minmax(0, 1fr) minmax(112px, .6fr); gap: 14px; }
+  .record-trade-terms-grid { grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, .55fr)); gap: 10px; }
+  .record-trade-value-grid { grid-template-columns: 1fr; gap: 16px; }
+  .record-trade-milestone-fields { grid-template-columns: 1fr; gap: 16px; }
+  .record-trade-section-header { align-items: flex-start; }
+  .record-trade-section-action .record-trade-add-milestone { min-height: 40px; padding-inline: 10px; font-size: 13px; }
+}
+
+@media (max-width: 380px) {
+  .record-trade-main { width: calc(100% - 32px); }
+  .record-trade-parties-grid { grid-template-columns: 1fr; gap: 16px; }
+  .record-trade-counterparty { width: 100%; margin-top: 0; }
+  .record-trade-terms-grid { grid-template-columns: 1fr 1fr; }
+  .record-trade-terms-grid > :first-child { grid-column: 1 / -1; }
+  .record-trade-section-header { gap: 10px; }
+  .record-trade-section-action .record-trade-add-milestone { max-width: 122px; white-space: normal; }
+  .record-trade-actions { gap: 8px; }
+  .record-trade-cancel, .record-trade-save { width: min(160px, calc((100% - 8px) / 2)); }
 }
