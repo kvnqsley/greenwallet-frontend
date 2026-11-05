@@ -34,6 +34,7 @@ export interface Milestone {
 export interface Ticket {
   id: string;
   reference: string;
+  title?: string | null;
   status:
     | "DRAFT"
     | "AWAITING_ACCEPTANCE"
@@ -72,6 +73,7 @@ export interface Ticket {
 }
 
 export interface CreateTicketRequest {
+  title?: string | null;
   buyerOrgId: string;
   supplierOrgId: string;
   exporterOrgId?: string | null;

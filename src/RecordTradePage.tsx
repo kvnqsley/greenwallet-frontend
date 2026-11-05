@@ -77,9 +77,9 @@ export function RecordTradePage() {
 
   // User and organization state
   const [me, setMe] = useState<UserMeResponse | null>(null);
-  const [myRole, setMyRole] = useState<"BUYER" | "SUPPLIER">("BUYER");
 
-  // Counterparty search state
+  // Trade parties state
+  const [ticketName, setTicketName] = useState("");
   const [counterpartySearch, setCounterpartySearch] = useState("");
   const [searchResults, setSearchResults] = useState<OrganizationSummary[]>([]);
   const [selectedCounterparty, setSelectedCounterparty] = useState<OrganizationSummary | null>(null);
@@ -99,12 +99,6 @@ export function RecordTradePage() {
     getMeApi()
       .then((data) => {
         setMe(data);
-        if (data.memberships.length > 0) {
-          const userOrgRoles = data.memberships[0]?.organization?.roles || [];
-          if (userOrgRoles.includes("SUPPLIER") && !userOrgRoles.includes("BUYER")) {
-            setMyRole("SUPPLIER");
-          }
-        }
       })
       .catch((err) => {
         console.error(err);
@@ -195,14 +189,15 @@ export function RecordTradePage() {
 
     try {
       // Backend expects unitPriceMinor as a string representation of minor units (e.g. kobo/cents)
-      // unitPrice = total / quantity
       const unitPrice = totalNum / qtyNum;
       const unitPriceMinor = Math.round(unitPrice * 100).toString();
 
-      const buyerOrgId = myRole === "BUYER" ? myOrgId : selectedCounterparty.id;
-      const supplierOrgId = myRole === "SUPPLIER" ? myOrgId : selectedCounterparty.id;
+      // Creator is unconditionally the BUYER; Counterparty is unconditionally the SUPPLIER
+      const buyerOrgId = myOrgId;
+      const supplierOrgId = selectedCounterparty.id;
 
       const created = await createTicketApi({
+        title: ticketName.trim() || null,
         buyerOrgId,
         supplierOrgId,
         commodity: commodity.trim(),
@@ -284,36 +279,34 @@ export function RecordTradePage() {
           <form className="record-trade-form" onSubmit={handleSubmit}>
             <RecordTradeSection
               title="Trade Parties"
-              description="Name your role and select the counterparty organization."
+              description="Name the counterparty who can view this ticket."
             >
               <div className="record-trade-parties-grid">
-                <RecordTradeField label="Your Organization Role">
-                  <select
-                    value={myRole}
-                    onChange={(e) => setMyRole(e.target.value as "BUYER" | "SUPPLIER")}
-                  >
-                    <option value="BUYER">Buyer (I am purchasing)</option>
-                    <option value="SUPPLIER">Supplier (I am supplying)</option>
-                  </select>
-                  {me?.memberships[0]?.organization && (
-                    <span className="record-trade-field-hint">
-                      Operating as: <strong>{me.memberships[0].organization.name}</strong>
-                    </span>
-                  )}
+                <RecordTradeField label="Ticket name">
+                  <input
+                    type="text"
+                    name="ticketName"
+                    autoComplete="off"
+                    maxLength={160}
+                    placeholder="E.g. Maize supply to Lagos"
+                    value={ticketName}
+                    onChange={(e) => setTicketName(e.target.value)}
+                  />
                 </RecordTradeField>
               </div>
 
               <div className="record-trade-counterparty">
                 <RecordTradeField
-                  label="Counterparty organization (Search by Name)"
-                  hint="Type 1 or more letters to search registered organizations"
+                  label="Counterparty account"
+                  hint="Type 1 or more letters to search registered accounts"
                 >
                   <div className="autocomplete-container">
                     <input
                       type="text"
+                      name="counterparty"
                       autoComplete="off"
                       maxLength={254}
-                      placeholder="Type counterparty organization name..."
+                      placeholder="Search by name"
                       value={counterpartySearch}
                       onChange={(e) => {
                         setCounterpartySearch(e.target.value);
@@ -381,7 +374,7 @@ export function RecordTradePage() {
                     type="text"
                     required
                     maxLength={120}
-                    placeholder="E.g. Maize, Cocoa, Soybeans"
+                    placeholder="E.g. Maize"
                     value={commodity}
                     onChange={(e) => setCommodity(e.target.value)}
                   />
@@ -397,14 +390,14 @@ export function RecordTradePage() {
                     onChange={(e) => setQuantity(e.target.value)}
                   />
                 </RecordTradeField>
-                <RecordTradeField label="Weight unit">
+                <RecordTradeField label="Weight">
                   <select
+                    name="weightUnit"
                     value={weightUnit}
                     onChange={(e) => setWeightUnit(e.target.value)}
                   >
                     <option value="tonnes">tonnes</option>
                     <option value="kg">kg</option>
-                    <option value="bags">bags</option>
                   </select>
                 </RecordTradeField>
               </div>
@@ -443,7 +436,7 @@ export function RecordTradePage() {
                   <input
                     type="text"
                     maxLength={160}
-                    placeholder="E.g. Lagos, Kano, Port Harcourt"
+                    placeholder="E.g. Lagos"
                     value={deliveryLocation}
                     onChange={(e) => setDeliveryLocation(e.target.value)}
                   />
@@ -454,7 +447,7 @@ export function RecordTradePage() {
                 <textarea
                   className="record-trade-terms-textarea"
                   maxLength={2000}
-                  placeholder="Record grade, packaging, delivery terms, inspection arrangements, and other details"
+                  placeholder="Record grade, packaging, delivery, terms, inspection arrangements, and other details agreed for this transaction"
                   value={terms}
                   onChange={(e) => setTerms(e.target.value)}
                 />
@@ -482,7 +475,7 @@ export function RecordTradePage() {
                         <input
                           type="text"
                           maxLength={120}
-                          placeholder="E.g. Quality inspection / Delivery"
+                          placeholder="E.g. Quality inspection"
                           value={milestone.title}
                           onChange={(e) =>
                             updateMilestone(milestone.id, "title", e.target.value)
@@ -502,7 +495,7 @@ export function RecordTradePage() {
                     <RecordTradeField label={`Details for step ${index + 1} (optional)`}>
                       <textarea
                         maxLength={1000}
-                        placeholder="Details agreed for this milestone"
+                        placeholder="Details the parties agreed on"
                         value={milestone.details}
                         onChange={(e) =>
                           updateMilestone(milestone.id, "details", e.target.value)
@@ -523,6 +516,9 @@ export function RecordTradePage() {
               </div>
             </RecordTradeSection>
 
+            <p className="record-trade-preview-note">
+              Records are saved directly to your GreenWallet workspace.
+            </p>
             {notice && (
               <p
                 className="record-trade-notice"
@@ -546,7 +542,7 @@ export function RecordTradePage() {
                 type="submit"
                 disabled={submitting}
               >
-                {submitting ? "Saving..." : "Save draft ticket"}
+                {submitting ? "Saving..." : "Save draft"}
               </button>
             </div>
           </form>

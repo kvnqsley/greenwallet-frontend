@@ -202,11 +202,7 @@ function AuthenticationPage({ mode }: { mode: AuthPageMode }) {
           <a className="auth-back-link" href="/">
             Back to GreenWallet
           </a>
-          {mode === "sign-in" && (
-            <a className="auth-preview-workspace" href="/trade-tickets">
-              Preview the trade workspace
-            </a>
-          )}
+          {mode === "sign-in"}
         </section>
         <section className="auth-card" aria-labelledby="auth-title">
           <div className="auth-card-heading">

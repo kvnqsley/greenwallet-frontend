@@ -370,10 +370,6 @@ function ContactSection() {
           <span>Contact GreenWallet</span>
           <ArrowIcon />
         </a>
-        <p className="preview-note" id="contact-note">
-          This preview has no connected contact, sign-in, or trade workspace
-          service.
-        </p>
       </div>
     </section>
   );

@@ -277,7 +277,7 @@ export function TradeTicketsPage() {
                 <thead>
                   <tr>
                     <th>Reference</th>
-                    <th>Commodity</th>
+                    <th>Ticket / Commodity</th>
                     <th>Buyer</th>
                     <th>Supplier</th>
                     <th>Quantity</th>
@@ -290,7 +290,18 @@ export function TradeTicketsPage() {
                     <tr key={t.id}>
                       <td style={{ fontWeight: 600 }}>{t.reference}</td>
                       <td>
-                        {t.commodity} {t.grade ? `(${t.grade})` : ""}
+                        {t.title ? (
+                          <>
+                            <div style={{ fontWeight: 500 }}>{t.title}</div>
+                            <div style={{ fontSize: "12px", color: "#666" }}>
+                              {t.commodity} {t.grade ? `(${t.grade})` : ""}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            {t.commodity} {t.grade ? `(${t.grade})` : ""}
+                          </>
+                        )}
                       </td>
                       <td>{t.buyer?.name || t.buyerOrgId.slice(0, 8)}</td>
                       <td>{t.supplier?.name || t.supplierOrgId.slice(0, 8)}</td>
@@ -324,7 +335,7 @@ export function TradeTicketsPage() {
               <div>
                 <span className="workspace-eyebrow">Trade Ticket</span>
                 <h2 style={{ margin: "4px 0 0", fontSize: "22px" }}>
-                  {selectedTicket.reference} - {selectedTicket.commodity}
+                  {selectedTicket.reference} - {selectedTicket.title || selectedTicket.commodity}
                 </h2>
               </div>
               <button
