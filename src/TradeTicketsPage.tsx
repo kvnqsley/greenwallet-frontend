@@ -266,8 +266,8 @@ export function TradeTicketsPage() {
             <article className="workspace-info-card">
               <h2>Trade tickets</h2>
               <p>Create a record or reopen a ticket shared with you</p>
-              <a className="workspace-card-action" href="/trade-tickets/review">
-                Review shared ticket
+              <a className="workspace-card-action" href="/trade-tickets/details">
+                View shared ticket
               </a>
             </article>
             <article className="workspace-info-card">
