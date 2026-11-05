@@ -698,6 +698,17 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
 .ticket-result-icon.is-rejected { background: #f8ecea; color: #8e3f36; }
 .ticket-result-card .ticket-flow-disclaimer { max-width: 480px; margin: 20px auto 24px; }
 .ticket-result-card .ticket-accept-action { margin-inline: auto; }
+.ticket-detail-block { margin-top: 24px; padding-top: 20px; border-top: 1px solid #ececec; }
+.ticket-detail-block h3 { margin: 0; color: var(--ink); font-size: 14px; font-weight: 600; }
+.ticket-detail-block ul { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.ticket-detail-block li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; color: var(--ink); font-size: 14px; }
+.ticket-detail-block li span:last-child { color: var(--muted); }
+.ticket-detail-copy { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.ticket-flow-notice { max-width: 560px; margin: 24px 0 0; }
+.ticket-flow-notice.is-error { color: #8e3f36; }
+.ticket-result-card .ticket-flow-notice { margin-inline: auto; }
+.ticket-result-actions { justify-content: center; }
+.ticket-result-actions .ticket-accept-action { margin-inline: 0; }
 
 @media (max-width: 760px) {
   .ticket-flow-main { width: min(100% - 40px, 650px); margin: 38px auto 60px; }

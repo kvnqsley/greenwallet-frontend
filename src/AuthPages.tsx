@@ -300,6 +300,8 @@ function EmailVerificationPage() {
             });
             setCurrentUser(res.user);
           }
+          authStorage.clearPendingEmail();
+          window.location.href = "/sign-in";
         })
         .catch((err: Error) => {
           setNotice(err.message || "Failed to verify email.");

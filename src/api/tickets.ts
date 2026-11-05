@@ -96,6 +96,32 @@ export interface TicketListResponse {
   nextCursor: string | null;
 }
 
+export interface TicketCharge {
+  id: string;
+  ticketId: string;
+  organizationId: string;
+  provider: "MOCK" | "PAYSTACK" | "NOMBA";
+  reference: string;
+  amountMinor: string;
+  currency: string;
+  status: "PENDING" | "SUCCESS" | "FAILED" | "ABANDONED" | "REVERSED";
+  authorizationUrl: string | null;
+  accessCode: string | null;
+  customerEmail: string;
+  channel: string | null;
+  providerTransactionId: string | null;
+  failureReason: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TicketPaymentResponse {
+  ticket: Ticket;
+  charge: TicketCharge | null;
+  blockedReason: string | null;
+}
+
 export interface UserMembershipOrg {
   id: string;
   role: string;
@@ -281,6 +307,35 @@ export async function cancelTicketApi(ticketId: string): Promise<Ticket> {
   });
   const data = await handleResponse<{ ticket: Ticket }>(res);
   return data.ticket;
+}
+
+export async function getTicketPaymentApi(
+  ticketId: string
+): Promise<TicketPaymentResponse> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/payment`
+  );
+  return handleResponse<TicketPaymentResponse>(res);
+}
+
+export async function verifyTicketPaymentApi(
+  ticketId: string
+): Promise<TicketPaymentResponse> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/payment/verify`,
+    { method: "POST" }
+  );
+  return handleResponse<TicketPaymentResponse>(res);
+}
+
+export async function startTicketPaymentApi(
+  ticketId: string
+): Promise<TicketPaymentResponse> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/fund`,
+    { method: "POST" }
+  );
+  return handleResponse<TicketPaymentResponse>(res);
 }
 
 export async function createMilestoneApi(

@@ -4,6 +4,7 @@ import { IdentityVerificationPage } from "./IdentityVerificationPage";
 import { isIdentityVerified } from "./identity";
 import { RecordTradePage } from "./RecordTradePage";
 import {
+  PaymentCallbackPage,
   ReviewTradeTicketPage,
   TradeDecisionResultPage,
 } from "./TicketFlowPages";
@@ -452,6 +453,8 @@ export function App() {
   }
 
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  const searchParams = new URLSearchParams(window.location.search);
+  const ticketId = searchParams.get("ticketId") ?? "";
   if (path === "/verify-identity" || path === "/kyc-verification") {
     return (
       <>
@@ -498,18 +501,9 @@ export function App() {
   }
 
   if (path === "/trade-tickets/review") {
-    if (!isIdentityVerified()) {
-      return (
-        <>
-          <IdentityVerificationPage returnTo="/trade-tickets/review" />
-          <NetworkStatus />
-        </>
-      );
-    }
-
     return (
       <>
-        <ReviewTradeTicketPage />
+        <ReviewTradeTicketPage ticketId={ticketId} />
         <NetworkStatus />
       </>
     );
@@ -518,7 +512,7 @@ export function App() {
   if (path === "/trade-tickets/accepted") {
     return (
       <>
-        <TradeDecisionResultPage decision="accepted" />
+        <TradeDecisionResultPage decision="accepted" ticketId={ticketId} />
         <NetworkStatus />
       </>
     );
@@ -527,7 +521,16 @@ export function App() {
   if (path === "/trade-tickets/rejected") {
     return (
       <>
-        <TradeDecisionResultPage decision="rejected" />
+        <TradeDecisionResultPage decision="rejected" ticketId={ticketId} />
+        <NetworkStatus />
+      </>
+    );
+  }
+
+  if (path === "/payments/callback") {
+    return (
+      <>
+        <PaymentCallbackPage />
         <NetworkStatus />
       </>
     );

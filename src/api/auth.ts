@@ -118,6 +118,9 @@ export const authStorage = {
     localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
   },
+  clearPendingEmail() {
+    localStorage.removeItem(STORAGE_KEYS.PENDING_EMAIL);
+  },
 };
 
 async function handleResponse<T>(res: Response): Promise<T> {

@@ -1,11 +1,6 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   listTicketsApi,
-  getTicketApi,
-  submitTicketApi,
-  acceptTicketApi,
-  declineTicketApi,
-  cancelTicketApi,
   type Ticket,
   type UserMeResponse,
   getMeApi,
@@ -62,7 +57,7 @@ export function WorkspaceNavigation({
   );
 }
 
-function formatStatusBadge(status: Ticket["status"]) {
+export function formatStatusBadge(status: Ticket["status"]) {
   switch (status) {
     case "DRAFT":
       return <span className="ticket-badge ticket-badge-draft">Draft</span>;
@@ -91,9 +86,6 @@ export function TradeTicketsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchCommodity, setSearchCommodity] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [me, setMe] = useState<UserMeResponse | null>(null);
 
   useEffect(() => {
@@ -132,68 +124,8 @@ export function TradeTicketsPage() {
     fetchTickets();
   }
 
-  async function viewTicket(id: string) {
-    setModalLoading(true);
-    setActionNotice(null);
-    try {
-      const ticket = await getTicketApi(id);
-      setSelectedTicket(ticket);
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Error fetching ticket details");
-    } finally {
-      setModalLoading(false);
-    }
-  }
-
-  async function handleSubmitTicket(ticketId: string) {
-    setActionNotice(null);
-    try {
-      const updated = await submitTicketApi(ticketId);
-      setSelectedTicket(updated);
-      fetchTickets();
-      setActionNotice("Ticket submitted for acceptance!");
-    } catch (err: unknown) {
-      setActionNotice(err instanceof Error ? err.message : "Failed to submit ticket");
-    }
-  }
-
-  async function handleAcceptTicket(ticketId: string) {
-    setActionNotice(null);
-    try {
-      const userOrgId = me?.memberships[0]?.organization?.id;
-      const updated = await acceptTicketApi(ticketId, userOrgId);
-      setSelectedTicket(updated);
-      fetchTickets();
-      setActionNotice("Ticket accepted successfully!");
-    } catch (err: unknown) {
-      setActionNotice(err instanceof Error ? err.message : "Failed to accept ticket");
-    }
-  }
-
-  async function handleDeclineTicket(ticketId: string) {
-    setActionNotice(null);
-    try {
-      const userOrgId = me?.memberships[0]?.organization?.id;
-      const updated = await declineTicketApi(ticketId, userOrgId);
-      setSelectedTicket(updated);
-      fetchTickets();
-      setActionNotice("Ticket declined.");
-    } catch (err: unknown) {
-      setActionNotice(err instanceof Error ? err.message : "Failed to decline ticket");
-    }
-  }
-
-  async function handleCancelTicket(ticketId: string) {
-    if (!confirm("Are you sure you want to cancel this ticket?")) return;
-    setActionNotice(null);
-    try {
-      const updated = await cancelTicketApi(ticketId);
-      setSelectedTicket(updated);
-      fetchTickets();
-      setActionNotice("Ticket cancelled.");
-    } catch (err: unknown) {
-      setActionNotice(err instanceof Error ? err.message : "Failed to cancel ticket");
-    }
+  function openTicket(id: string) {
+    window.location.href = `/trade-tickets/review?ticketId=${encodeURIComponent(id)}`;
   }
 
   function handleSignOut() {
@@ -266,9 +198,9 @@ export function TradeTicketsPage() {
             <article className="workspace-info-card">
               <h2>Trade tickets</h2>
               <p>Create a record or reopen a ticket shared with you</p>
-              <a className="workspace-card-action" href="/trade-tickets/details">
+              {/* <a className="workspace-card-action" href="/trade-tickets/details">
                 View shared ticket
-              </a>
+              </a> */}
             </article>
             <article className="workspace-info-card">
               <h2>Identity verification is required</h2>
@@ -280,15 +212,9 @@ export function TradeTicketsPage() {
           </section>
 
           <p className="workspace-preview-note">
-            Preview only. Sign-in, profile management, and trade ticket services
-            are not connected. Identity checks use a dummy service; entered
-            identity details are not sent or stored.
+            Tickets you create or are invited to appear here. Open a ticket to
+            review its terms, accept or reject it, or fund an accepted trade.
           </p>
-          {/* {notice && (
-            <p className="workspace-notice" role="status" aria-live="polite">
-              {noticeCopy[notice]}
-            </p>
-          )} */}
 
           <div className="ticket-table-container">
             {loading ? (
@@ -338,7 +264,7 @@ export function TradeTicketsPage() {
                         <button
                           className="ticket-view-btn"
                           type="button"
-                          onClick={() => viewTicket(t.id)}
+                          onClick={() => openTicket(t.id)}
                         >
                           View Details
                         </button>
@@ -352,143 +278,6 @@ export function TradeTicketsPage() {
         </main>
       </div>
 
-      {/* Ticket Details Modal */}
-      {selectedTicket && (
-        <div className="ticket-modal-overlay" onClick={() => setSelectedTicket(null)}>
-          <div className="ticket-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="ticket-modal-header">
-              <div>
-                <span className="workspace-eyebrow">Trade Ticket</span>
-                <h2 style={{ margin: "4px 0 0", fontSize: "22px" }}>
-                  {selectedTicket.reference} - {selectedTicket.title || selectedTicket.commodity}
-                </h2>
-              </div>
-              <button
-                className="ticket-modal-close"
-                type="button"
-                onClick={() => setSelectedTicket(null)}
-              >
-                &times;
-              </button>
-            </div>
-
-            <div style={{ display: "grid", gap: "16px", fontSize: "14px", lineHeight: "1.6" }}>
-              <div>
-                <strong>Status:</strong> {formatStatusBadge(selectedTicket.status)}
-              </div>
-              <div>
-                <strong>Buyer:</strong> {selectedTicket.buyer?.name || selectedTicket.buyerOrgId}
-              </div>
-              <div>
-                <strong>Supplier:</strong> {selectedTicket.supplier?.name || selectedTicket.supplierOrgId}
-              </div>
-              {selectedTicket.exporter && (
-                <div>
-                  <strong>Exporter:</strong> {selectedTicket.exporter.name}
-                </div>
-              )}
-              <div>
-                <strong>Quantity & Unit:</strong> {selectedTicket.quantity} {selectedTicket.unit}
-              </div>
-              <div>
-                <strong>Unit Price:</strong> {(Number(selectedTicket.unitPriceMinor) / 100).toLocaleString()}{" "}
-                {selectedTicket.currency}
-              </div>
-              <div>
-                <strong>Total Value:</strong> {(Number(selectedTicket.totalMinor) / 100).toLocaleString()}{" "}
-                {selectedTicket.currency}
-              </div>
-              {selectedTicket.deliveryLocation && (
-                <div>
-                  <strong>Delivery Location:</strong> {selectedTicket.deliveryLocation}
-                </div>
-              )}
-              {selectedTicket.deliveryTerms && (
-                <div>
-                  <strong>Delivery Terms:</strong> {selectedTicket.deliveryTerms}
-                </div>
-              )}
-              {selectedTicket.terms && (
-                <div>
-                  <strong>Terms:</strong>
-                  <p style={{ margin: "4px 0 0", color: "#444", whiteSpace: "pre-wrap" }}>
-                    {selectedTicket.terms}
-                  </p>
-                </div>
-              )}
-
-              {selectedTicket.milestones && selectedTicket.milestones.length > 0 && (
-                <div style={{ marginTop: "12px" }}>
-                  <strong>Milestones:</strong>
-                  <ul style={{ paddingLeft: "20px", margin: "6px 0 0" }}>
-                    {selectedTicket.milestones.map((m) => (
-                      <li key={m.id}>
-                        {m.title} ({m.releaseBp / 100}%) - Status: {m.status}
-                        {m.dueDate && ` | Due: ${new Date(m.dueDate).toLocaleDateString()}`}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {actionNotice && (
-                <p style={{ color: "var(--green)", fontWeight: 500, margin: "10px 0 0" }}>
-                  {actionNotice}
-                </p>
-              )}
-
-              <div className="ticket-modal-actions">
-                {selectedTicket.status === "DRAFT" && (
-                  <button
-                    className="ticket-action-btn btn-primary"
-                    type="button"
-                    onClick={() => handleSubmitTicket(selectedTicket.id)}
-                  >
-                    Submit for Counterparty Acceptance
-                  </button>
-                )}
-
-                {selectedTicket.status === "AWAITING_ACCEPTANCE" && (
-                  <>
-                    <button
-                      className="ticket-action-btn btn-primary"
-                      type="button"
-                      onClick={() => handleAcceptTicket(selectedTicket.id)}
-                    >
-                      Accept Ticket
-                    </button>
-                    <button
-                      className="ticket-action-btn btn-outline"
-                      type="button"
-                      onClick={() => handleDeclineTicket(selectedTicket.id)}
-                    >
-                      Decline Ticket
-                    </button>
-                  </>
-                )}
-
-                {["DRAFT", "AWAITING_ACCEPTANCE"].includes(selectedTicket.status) && (
-                  <button
-                    className="ticket-action-btn btn-danger"
-                    type="button"
-                    onClick={() => handleCancelTicket(selectedTicket.id)}
-                  >
-                    Cancel Ticket
-                  </button>
-                )}
-
-                <button
-                  className="ticket-action-btn btn-outline"
-                  type="button"
-                  onClick={() => setSelectedTicket(null)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
