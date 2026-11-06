@@ -2524,7 +2524,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
   margin-top: 1.5rem;
   background: white;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 

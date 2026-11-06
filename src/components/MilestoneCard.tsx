@@ -155,9 +155,7 @@ export function MilestoneCard({
           <ul className="evidence-preview">
             {milestone.evidence?.slice(0, 3).map((doc: { id: string; name: string; type: string }) => (
               <li key={doc.id} className="evidence-preview-item">
-                <span className="evidence-icon">
-                  {doc.type.startsWith("image/") ? "🖼️" : "📄"}
-                </span>
+
                 <span className="evidence-name">{doc.name}</span>
               </li>
             ))}
