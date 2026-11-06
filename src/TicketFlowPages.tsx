@@ -573,7 +573,7 @@ export function ReviewTradeTicketPage({ ticketId }: { ticketId: string }) {
 
         <TicketDetails ticket={ticket} me={me} />
 
-        {ticket.milestones && ticket.milestones.length > 0 && ticket.status === "FUNDED" && (
+        {ticket.milestones && ticket.milestones.length > 0 && (ticket.status === "FUNDED" || ticket.status === "IN_PROGRESS") && (
           <section className="milestone-management-section" aria-labelledby="milestones-title">
             <h2 id="milestones-title">Milestone Management</h2>
             <MilestoneList

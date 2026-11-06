@@ -2,7 +2,11 @@
 // Allows buyers to review evidence and approve/reject milestone completion
 
 import { useState } from "react";
-import { confirmMilestoneApi, rejectMilestoneApi } from "../api/tickets";
+import {
+  confirmMilestoneApi,
+  downloadDocumentApi,
+  rejectMilestoneApi,
+} from "../api/tickets";
 
 interface Evidence {
   id: string;
@@ -37,8 +41,6 @@ export function MilestoneApprovalModal({
   onClose,
   ticketId,
   milestone,
-  onApprove,
-  onReject
 }: MilestoneApprovalModalProps) {
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [rejectNote, setRejectNote] = useState("");
@@ -48,6 +50,19 @@ export function MilestoneApprovalModal({
 
   if (!isOpen) return null;
 
+  const evidence = milestone.evidence ?? [];
+
+  const handleViewDocument = async (documentId: string) => {
+    try {
+      const result = await downloadDocumentApi(documentId);
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not open this document."
+      );
+    }
+  };
+
   const handleApprove = async () => {
     setSubmitting(true);
     setError(null);
@@ -56,7 +71,7 @@ export function MilestoneApprovalModal({
       setSuccess(true);
       setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError("Failed to approve milestone. Please try again.");
     } finally {
@@ -77,7 +92,7 @@ export function MilestoneApprovalModal({
       setSuccess(true);
       setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError("Failed to reject milestone. Please try again.");
     } finally {
@@ -96,14 +111,14 @@ export function MilestoneApprovalModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-content milestone-approval-modal"
+        className="modal-content"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-labelledby="milestone-approval-title"
         aria-modal="true"
       >
         <div className="modal-header">
-          <h2 id="milestone-approval-title">Review Milestone: {milestone.title}</h2>
+          <h2 id="milestone-approval-title">Review Milestone</h2>
           <button
             type="button"
             onClick={onClose}
@@ -116,90 +131,61 @@ export function MilestoneApprovalModal({
 
         <div className="modal-body">
           {error && (
-            <div className="error-message" role="alert">
-              {error}
-            </div>
+            <p className="modal-error" role="alert">{error}</p>
           )}
 
           {success && (
-            <div className="success-message" role="status">
+            <p className="modal-success" role="status">
               {action === "approve"
-                ? "Milestone approved! Funds will be released."
+                ? "Milestone approved. Funds will be released."
                 : "Milestone rejected. Supplier has been notified."}
-            </div>
+            </p>
           )}
 
           {!success && (
             <>
-              <div className="milestone-info">
-                <div className="milestone-detail">
-                  <span className="label">Amount</span>
-                  <span className="value">{formatCurrency(milestone.amountMinor)}</span>
-                </div>
-                <div className="milestone-detail">
-                  <span className="label">Status</span>
-                  <span className={`status-badge status-${milestone.status.toLowerCase()}`}>
-                    {milestone.status}
-                  </span>
-                </div>
-                {milestone.submittedAt && (
-                  <div className="milestone-detail">
-                    <span className="label">Submitted</span>
-                    <span className="value">
-                      {new Date(milestone.submittedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
+              <div className="modal-info-row">
+                <span className="modal-label">Milestone</span>
+                <span className="modal-value">{milestone.title}</span>
+              </div>
+              <div className="modal-info-row">
+                <span className="modal-label">Amount</span>
+                <span className="modal-value">{formatCurrency(milestone.amountMinor)}</span>
               </div>
 
-              {milestone.description && (
-                <div className="milestone-description">
-                  <h3>Description</h3>
-                  <p>{milestone.description}</p>
-                </div>
-              )}
-
-              <div className="evidence-review">
-                <h3>Evidence Documents ({milestone.evidence.length})</h3>
-                {milestone.evidence.length === 0 ? (
-                  <p className="no-evidence">No evidence documents submitted</p>
-                ) : (
-                  <ul className="evidence-list">
-                    {milestone.evidence.map(doc => (
-                      <li key={doc.id} className="evidence-item">
-                        <span className="evidence-icon">
-                          {doc.type.startsWith("image/") ? "🖼️" : "📄"}
-                        </span>
-                        <span className="evidence-name">{doc.name}</span>
-                        <span className="evidence-date">
-                          {new Date(doc.createdAt).toLocaleDateString()}
-                        </span>
+              {evidence.length > 0 && (
+                <div className="modal-section">
+                  <span className="modal-label">Evidence</span>
+                  <ul className="evidence-file-list">
+                    {evidence.map(doc => (
+                      <li key={doc.id} className="evidence-file-item">
+                        <span>{doc.name}</span>
                         <button
                           type="button"
-                          className="btn btn-small"
-                          onClick={() => window.open(doc.url, "_blank")}
+                          className="text-btn"
+                          onClick={() => void handleViewDocument(doc.id)}
                         >
                           View
                         </button>
                       </li>
                     ))}
                   </ul>
-                )}
-              </div>
+                </div>
+              )}
 
               {action === null && (
-                <div className="approval-actions">
+                <div className="modal-actions">
                   <button
                     type="button"
+                    className="btn btn-primary"
                     onClick={() => setAction("approve")}
-                    className="btn btn-success"
                   >
-                    Approve & Release Funds
+                    Approve
                   </button>
                   <button
                     type="button"
+                    className="btn btn-secondary"
                     onClick={() => setAction("reject")}
-                    className="btn btn-danger"
                   >
                     Reject
                   </button>
@@ -207,36 +193,34 @@ export function MilestoneApprovalModal({
               )}
 
               {action === "reject" && (
-                <div className="reject-form">
-                  <h3>Reject Milestone</h3>
-                  <label htmlFor="reject-note">
-                    Please provide a reason for rejection (required):
+                <div className="modal-section">
+                  <label htmlFor="reject-note" className="modal-label">
+                    Reason for rejection
                   </label>
                   <textarea
                     id="reject-note"
+                    className="modal-textarea"
                     value={rejectNote}
                     onChange={e => setRejectNote(e.target.value)}
-                    placeholder="Explain what evidence is missing or what needs to be corrected..."
-                    rows={4}
-                    minLength={3}
-                    maxLength={1000}
+                    placeholder="Explain what needs to be corrected..."
+                    rows={3}
                   />
-                  <div className="reject-form-actions">
+                  <div className="modal-actions">
                     <button
                       type="button"
+                      className="btn btn-secondary"
                       onClick={() => {
                         setAction(null);
                         setRejectNote("");
                       }}
-                      className="btn btn-secondary"
                       disabled={submitting}
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
-                      onClick={handleReject}
                       className="btn btn-danger"
+                      onClick={handleReject}
                       disabled={submitting || rejectNote.length < 3}
                     >
                       {submitting ? "Rejecting..." : "Confirm Rejection"}
@@ -246,28 +230,23 @@ export function MilestoneApprovalModal({
               )}
 
               {action === "approve" && (
-                <div className="approve-confirmation">
-                  <h3>Confirm Approval</h3>
-                  <p>
-                    By approving this milestone, <strong>{formatCurrency(milestone.amountMinor)}</strong>
-                    will be released from escrow to the supplier.
+                <div className="modal-section">
+                  <p className="modal-confirm-text">
+                    Confirm that the evidence meets requirements and approve this milestone for fund release.
                   </p>
-                  <p className="confirmation-note">
-                    This action cannot be undone.
-                  </p>
-                  <div className="approve-form-actions">
+                  <div className="modal-actions">
                     <button
                       type="button"
-                      onClick={() => setAction(null)}
                       className="btn btn-secondary"
+                      onClick={() => setAction(null)}
                       disabled={submitting}
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
+                      className="btn btn-primary"
                       onClick={handleApprove}
-                      className="btn btn-success"
                       disabled={submitting}
                     >
                       {submitting ? "Approving..." : "Confirm Approval"}

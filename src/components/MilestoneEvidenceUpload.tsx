@@ -4,12 +4,9 @@
 import { useState, useRef } from "react";
 import { uploadMilestoneEvidenceApi, submitMilestoneApi } from "../api/tickets";
 
-interface EvidenceFile {
+interface SelectedFile {
   id: string;
-  name: string;
-  size: number;
-  type: string;
-  url?: string;
+  file: File;
 }
 
 interface MilestoneEvidenceUploadProps {
@@ -28,46 +25,55 @@ export function MilestoneEvidenceUpload({
   milestoneTitle,
   onUploadComplete
 }: MilestoneEvidenceUploadProps) {
-  const [files, setFiles] = useState<EvidenceFile[]>([]);
+  const [files, setFiles] = useState<SelectedFile[]>([]);
+  const [uploaded, setUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    const validFiles = selectedFiles.filter(file => {
+    const validFiles: File[] = [];
+
+    setError(null);
+    setSuccess(null);
+
+    for (const file of selectedFiles) {
       if (!ALLOWED_TYPES.includes(file.type)) {
         setError(`File "${file.name}" is not a supported type. Allowed: JPEG, PNG, WebP, PDF`);
-        return false;
+        continue;
       }
       if (file.size > MAX_FILE_SIZE) {
         setError(`File "${file.name}" exceeds the 10MB size limit`);
-        return false;
+        continue;
       }
-      return true;
-    });
+      validFiles.push(file);
+    }
 
-    const newFiles: EvidenceFile[] = validFiles.map(file => ({
-      id: `${milestoneId}-${Date.now()}-${file.name}`,
-      name: file.name,
-      size: file.size,
-      type: file.type
-    }));
+    setFiles((prev) => [
+      ...prev,
+      ...validFiles.map((file) => ({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        file
+      }))
+    ]);
 
-    setFiles(prev => [...prev, ...newFiles]);
-    setError(null);
-
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   const handleRemoveFile = (fileId: string) => {
-    setFiles(prev => prev.filter(f => f.id !== fileId));
+    setFiles((prev) => prev.filter((item) => item.id !== fileId));
   };
+
+  async function uploadFiles(list: SelectedFile[]) {
+    for (const item of list) {
+      await uploadMilestoneEvidenceApi(ticketId, milestoneId, item.file);
+    }
+  }
 
   const handleUpload = async () => {
     if (files.length === 0) {
@@ -77,41 +83,48 @@ export function MilestoneEvidenceUpload({
 
     setUploading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      // Get the actual file objects from the file input
-      const fileInput = fileInputRef.current;
-      if (fileInput && fileInput.files) {
-        for (const file of Array.from(fileInput.files)) {
-          await uploadMilestoneEvidenceApi(ticketId, milestoneId, file);
-        }
-      }
-
-      setSuccess(true);
-      onUploadComplete?.();
+      await uploadFiles(files);
+      setFiles([]);
+      setUploaded(true);
+      setSuccess("Evidence uploaded successfully. Submit the milestone for buyer review when ready.");
     } catch (err) {
-      setError("Failed to upload evidence files. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to upload evidence files. Please try again."
+      );
     } finally {
       setUploading(false);
     }
   };
 
   const handleSubmitMilestone = async () => {
-    if (files.length === 0) {
+    if (files.length === 0 && !uploaded) {
       setError("Please upload at least one evidence file before submitting");
       return;
     }
 
     setSubmitting(true);
     setError(null);
+    setSuccess(null);
 
     try {
+      if (files.length > 0) {
+        await uploadFiles(files);
+        setFiles([]);
+      }
       await submitMilestoneApi(ticketId, milestoneId);
-
-      setSuccess(true);
+      setSuccess("Milestone submitted for buyer review.");
       onUploadComplete?.();
     } catch (err) {
-      setError("Failed to submit milestone. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to submit milestone. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +148,7 @@ export function MilestoneEvidenceUpload({
 
       {success && (
         <div className="success-message" role="status">
-          Evidence uploaded successfully! Milestone has been submitted for buyer review.
+          {success}
         </div>
       )}
 
@@ -164,16 +177,18 @@ export function MilestoneEvidenceUpload({
         <div className="file-list">
           <h4>Selected Files ({files.length})</h4>
           <ul>
-            {files.map(file => (
-              <li key={file.id} className="file-item">
-                <span className="file-name">{file.name}</span>
-                <span className="file-size">{formatFileSize(file.size)}</span>
+            {files.map((item) => (
+              <li key={item.id} className="file-item">
+                <span className="file-name">{item.file.name}</span>
+                <span className="file-size">
+                  {formatFileSize(item.file.size)}
+                </span>
                 <button
                   type="button"
-                  onClick={() => handleRemoveFile(file.id)}
+                  onClick={() => handleRemoveFile(item.id)}
                   disabled={uploading || submitting}
                   className="remove-file-btn"
-                  aria-label={`Remove ${file.name}`}
+                  aria-label={`Remove ${item.file.name}`}
                 >
                   ×
                 </button>
@@ -184,12 +199,21 @@ export function MilestoneEvidenceUpload({
       )}
 
       <div className="upload-actions">
-
+        <button
+          type="button"
+          onClick={handleUpload}
+          disabled={files.length === 0 || uploading || submitting}
+          className="btn btn-secondary"
+        >
+          {uploading ? "Uploading..." : "Upload Evidence"}
+        </button>
 
         <button
           type="button"
           onClick={handleSubmitMilestone}
-          disabled={files.length === 0 || uploading || submitting}
+          disabled={
+            (files.length === 0 && !uploaded) || uploading || submitting
+          }
           className="btn btn-primary"
         >
           {submitting ? "Submitting..." : "Submit for Buyer Review"}

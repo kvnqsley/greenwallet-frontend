@@ -446,22 +446,55 @@ export interface EvidenceFile {
   createdAt: string;
 }
 
+async function fileToBase64(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const chunkSize = 0x8000;
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(index, index + chunkSize)
+    );
+  }
+  return btoa(binary);
+}
+
 export async function uploadMilestoneEvidenceApi(
   ticketId: string,
   milestoneId: string,
   file: File
 ): Promise<EvidenceFile> {
-  const formData = new FormData();
-  formData.append("file", file);
+  const dataBase64 = await fileToBase64(file);
 
   const res = await authenticatedFetch(
     `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/evidence`,
     {
       method: "POST",
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+        dataBase64,
+      }),
     }
   );
-  return handleResponse<EvidenceFile>(res);
+
+  const data = await handleResponse<{
+    document: {
+      id: string;
+      originalName: string | null;
+      mimeType: string;
+      sizeBytes: number;
+      createdAt: string;
+    };
+  }>(res);
+
+  return {
+    id: data.document.id,
+    name: data.document.originalName ?? file.name,
+    mimeType: data.document.mimeType,
+    sizeBytes: data.document.sizeBytes,
+    createdAt: data.document.createdAt,
+  };
 }
 
 export async function listMilestoneEvidenceApi(
@@ -471,8 +504,31 @@ export async function listMilestoneEvidenceApi(
   const res = await authenticatedFetch(
     `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/evidence`
   );
-  const data = await handleResponse<{ evidence: EvidenceFile[] }>(res);
-  return data.evidence;
+  const data = await handleResponse<{
+    documents: Array<{
+      id: string;
+      originalName: string | null;
+      mimeType: string;
+      sizeBytes: number;
+      createdAt: string;
+    }>;
+  }>(res);
+  return data.documents.map((document) => ({
+    id: document.id,
+    name: document.originalName ?? "Evidence file",
+    mimeType: document.mimeType,
+    sizeBytes: document.sizeBytes,
+    createdAt: document.createdAt,
+  }));
+}
+
+export async function downloadDocumentApi(
+  documentId: string
+): Promise<{ url: string; expiresAt: string }> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/documents/${documentId}/download`
+  );
+  return handleResponse<{ url: string; expiresAt: string }>(res);
 }
 
 export interface TicketPdfDownload {
