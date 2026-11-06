@@ -1563,10 +1563,17 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
 
 .milestone-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--line);
+}
+
+.milestone-action-error {
+  margin: 0.75rem 0 0;
+  color: #b42318;
+  font-size: 0.875rem;
 }
 
 .completed-badge {
