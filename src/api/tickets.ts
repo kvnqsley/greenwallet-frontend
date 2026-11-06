@@ -23,12 +23,22 @@ export interface TicketParty {
 
 export interface Milestone {
   id: string;
+  ticketId: string;
   sequence: number;
   title: string;
   description: string | null;
   releaseBp: number;
+  amountMinor: string;
   dueDate: string | null;
   status: "PENDING" | "SUBMITTED" | "CONFIRMED" | "REJECTED" | "RELEASED" | "CANCELLED";
+  submittedById?: string | null;
+  submittedAt?: string | null;
+  confirmedById?: string | null;
+  confirmedAt?: string | null;
+  releasedAt?: string | null;
+  rejectionNote?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Ticket {
@@ -354,4 +364,55 @@ export async function createMilestoneApi(
   });
   const data = await handleResponse<{ milestone: Milestone }>(res);
   return data.milestone;
+}
+
+export interface TicketPdfDownload {
+  document: {
+    id: string;
+    kind: string;
+    originalName: string;
+    mimeType: string;
+    sizeBytes: number;
+  };
+  download: {
+    url: string;
+    expiresAt: string;
+  };
+  snapshotHash: string;
+}
+
+export async function downloadTicketPdfApi(
+  ticketId: string
+): Promise<TicketPdfDownload> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/pdf`
+  );
+  return handleResponse<TicketPdfDownload>(res);
+}
+
+export interface TicketShareLink {
+  shareLink: {
+    id: string;
+    ticketId: string;
+    expiresAt: string;
+    revokedAt: string | null;
+    createdAt: string;
+    active: boolean;
+  };
+  token: string;
+  url: string;
+}
+
+export async function createTicketShareLinkApi(
+  ticketId: string
+): Promise<TicketShareLink> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/share-links`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }
+  );
+  return handleResponse<TicketShareLink>(res);
 }

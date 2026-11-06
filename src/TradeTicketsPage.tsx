@@ -125,7 +125,7 @@ export function TradeTicketsPage() {
   }
 
   function openTicket(id: string) {
-    window.location.href = `/trade-tickets/review?ticketId=${encodeURIComponent(id)}`;
+    window.location.href = `/trade-tickets/details?ticketId=${encodeURIComponent(id)}`;
   }
 
   function handleSignOut() {
@@ -221,7 +221,7 @@ export function TradeTicketsPage() {
               <div className="ticket-empty-state">Loading trade tickets...</div>
             ) : tickets.length === 0 ? (
               <div className="ticket-empty-state">
-                No trade tickets found matching your query.
+                No trade tickets found.
               </div>
             ) : (
               <table className="ticket-table">

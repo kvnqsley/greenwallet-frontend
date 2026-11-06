@@ -3,6 +3,8 @@ import {
   acceptTicketApi,
   cancelTicketApi,
   declineTicketApi,
+  createTicketShareLinkApi,
+  downloadTicketPdfApi,
   getMeApi,
   getTicketApi,
   getTicketPaymentApi,
@@ -253,8 +255,9 @@ export function ReviewTradeTicketPage({ ticketId }: { ticketId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState<
-    "accept" | "decline" | "submit" | "cancel" | "fund" | null
+    "accept" | "decline" | "submit" | "cancel" | "fund" | "pdf" | "share" | null
   >(null);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -467,6 +470,48 @@ export function ReviewTradeTicketPage({ ticketId }: { ticketId: string }) {
     }
   }
 
+  async function downloadPdf() {
+    if (!ticket) return;
+    setBusy("pdf");
+    setActionError(null);
+    try {
+      const result = await downloadTicketPdfApi(ticket.id);
+      window.open(result.download.url, "_blank", "noopener,noreferrer");
+    } catch (pdfError) {
+      setActionError(
+        pdfError instanceof Error
+          ? pdfError.message
+          : "Could not generate the PDF."
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function shareTicket() {
+    if (!ticket) return;
+    setBusy("share");
+    setActionError(null);
+    setShareNotice(null);
+    try {
+      const result = await createTicketShareLinkApi(ticket.id);
+      try {
+        await navigator.clipboard.writeText(result.url);
+        setShareNotice("Share link copied to clipboard.");
+      } catch {
+        setShareNotice(result.url);
+      }
+    } catch (shareError) {
+      setActionError(
+        shareError instanceof Error
+          ? shareError.message
+          : "Could not create a share link."
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <WorkspaceFrame>
       <section
@@ -485,9 +530,55 @@ export function ReviewTradeTicketPage({ ticketId }: { ticketId: string }) {
           {ticket.reference} · {formatStatusBadge(ticket.status)}
         </p>
         <h2>{ticket.title || ticket.commodity}</h2>
+
+        <div className="ticket-details-actions">
+          <button
+            className="ticket-details-action"
+            type="button"
+            onClick={() => void downloadPdf()}
+            disabled={busy !== null}
+          >
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" aria-hidden="true">
+              <path
+                d="M12 4v10m0 0 4-4m-4 4-4-4M5 16.5v1.75A1.75 1.75 0 0 0 6.75 20h10.5A1.75 1.75 0 0 0 19 18.25V16.5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>{busy === "pdf" ? "Preparing..." : "Download PDF"}</span>
+          </button>
+          <button
+            className="ticket-details-action"
+            type="button"
+            onClick={() => void shareTicket()}
+            disabled={busy !== null}
+          >
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" aria-hidden="true">
+              <path
+                d="M9 7H6.75A1.75 1.75 0 0 0 5 8.75v9.5A1.75 1.75 0 0 0 6.75 20h9.5A1.75 1.75 0 0 0 18 18.25V16"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M13 5h6v6M19 5l-8 8"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>{busy === "share" ? "Creating link..." : "Share ticket"}</span>
+          </button>
+        </div>
+
         <TicketDetails ticket={ticket} me={me} />
 
         {actionError && <StatusNotice tone="error">{actionError}</StatusNotice>}
+        {shareNotice && <StatusNotice>{shareNotice}</StatusNotice>}
 
         {ticket.status === "AWAITING_ACCEPTANCE" && (
           <StatusNotice>
