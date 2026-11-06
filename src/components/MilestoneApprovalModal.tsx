@@ -2,6 +2,7 @@
 // Allows buyers to review evidence and approve/reject milestone completion
 
 import { useState } from "react";
+import { confirmMilestoneApi, rejectMilestoneApi } from "../api/tickets";
 
 interface Evidence {
   id: string;
@@ -51,7 +52,7 @@ export function MilestoneApprovalModal({
     setSubmitting(true);
     setError(null);
     try {
-      await onApprove(milestone.id);
+      await confirmMilestoneApi(ticketId, milestone.id);
       setSuccess(true);
       setTimeout(() => {
         onClose();
@@ -72,7 +73,7 @@ export function MilestoneApprovalModal({
     setSubmitting(true);
     setError(null);
     try {
-      await onReject(milestone.id, rejectNote);
+      await rejectMilestoneApi(ticketId, milestone.id, rejectNote);
       setSuccess(true);
       setTimeout(() => {
         onClose();

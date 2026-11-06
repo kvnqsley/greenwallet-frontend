@@ -258,17 +258,7 @@ export function RecordTradePage() {
       </a>
       <WorkspaceHeader onSignOut={handleSignOut} />
       <div className="workspace-layout">
-        <WorkspaceNavigation
-          onProfile={() =>
-            alert(
-              me?.user
-                ? `Signed in as: ${me.user.name} (${me.user.email})\nOrganization: ${
-                    me.memberships[0]?.organization?.name || "None"
-                  }`
-                : "No profile loaded."
-            )
-          }
-        />
+        <WorkspaceNavigation current="tickets" />
         <main className="workspace-main record-trade-main" id="workspace-main">
           <section className="record-trade-intro" aria-labelledby="record-trade-title">
             <p className="workspace-eyebrow">Trade record Nigeria</p>

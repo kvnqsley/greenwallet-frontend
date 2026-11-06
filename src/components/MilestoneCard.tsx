@@ -5,6 +5,7 @@ import { useState } from "react";
 import { MilestoneEvidenceUpload } from "./MilestoneEvidenceUpload";
 import { MilestoneApprovalModal } from "./MilestoneApprovalModal";
 import type { Milestone as ApiMilestone } from "../api/tickets";
+import { submitMilestoneApi, confirmMilestoneApi, rejectMilestoneApi } from "../api/tickets";
 
 interface MilestoneCardProps {
   milestone: ApiMilestone & {
@@ -21,8 +22,28 @@ interface MilestoneCardProps {
     releasedAt?: string | null;
   };
   ticketId: string;
-  userRole: "SUPPLIER" | "BUYER";
+  userRole?: "SUPPLIER" | "BUYER";
   onStatusChange?: () => void;
+}
+
+// Map milestone status to ticket-badge classes
+function getMilestoneBadgeClass(status: string): string {
+  switch (status) {
+    case "PENDING":
+      return "ticket-badge ticket-badge-draft";
+    case "SUBMITTED":
+      return "ticket-badge ticket-badge-awaiting";
+    case "CONFIRMED":
+      return "ticket-badge ticket-badge-active";
+    case "RELEASED":
+      return "ticket-badge ticket-badge-funded";
+    case "REJECTED":
+      return "ticket-badge ticket-badge-cancelled";
+    case "CANCELLED":
+      return "ticket-badge ticket-badge-cancelled";
+    default:
+      return "ticket-badge";
+  }
 }
 
 export function MilestoneCard({
@@ -59,18 +80,6 @@ export function MilestoneCard({
     return labels[status] || status;
   };
 
-  const getStatusClass = (status: string): string => {
-    const classes: Record<string, string> = {
-      PENDING: "status-pending",
-      SUBMITTED: "status-submitted",
-      CONFIRMED: "status-confirmed",
-      REJECTED: "status-rejected",
-      RELEASED: "status-released",
-      CANCELLED: "status-cancelled"
-    };
-    return classes[status] || "";
-  };
-
   const canUploadEvidence = userRole === "SUPPLIER" &&
     (milestone.status === "PENDING" || milestone.status === "REJECTED");
 
@@ -83,26 +92,24 @@ export function MilestoneCard({
   const evidenceCount = milestone.evidence?.length || 0;
 
   const handleApprove = async (milestoneId: string) => {
-    // In production, this would call the API
-    console.log(`Approving milestone ${milestoneId}`);
+    await confirmMilestoneApi(ticketId, milestoneId);
     onStatusChange?.();
   };
 
   const handleReject = async (milestoneId: string, note: string) => {
-    // In production, this would call the API
-    console.log(`Rejecting milestone ${milestoneId} with note: ${note}`);
+    await rejectMilestoneApi(ticketId, milestoneId, note);
     onStatusChange?.();
   };
 
   return (
-    <div className={`milestone-card ${getStatusClass(milestone.status)}`}>
+    <div className="milestone-card">
       <div className="milestone-header">
         <div className="milestone-sequence">
           <span className="sequence-number">{milestone.sequence}</span>
         </div>
         <div className="milestone-title-area">
           <h3 className="milestone-title">{milestone.title}</h3>
-          <span className={`status-badge ${getStatusClass(milestone.status)}`}>
+          <span className={getMilestoneBadgeClass(milestone.status)}>
             {getStatusLabel(milestone.status)}
           </span>
         </div>

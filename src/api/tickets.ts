@@ -151,8 +151,15 @@ export interface UserMeResponse {
     phone: string | null;
     name: string;
     platformRole: string;
+    emailVerifiedAt?: string | null;
+    createdAt?: string;
   };
   memberships: UserMembershipOrg[];
+}
+
+export interface UpdateMeRequest {
+  name?: string;
+  phone?: string;
 }
 
 export async function authenticatedFetch(
@@ -227,6 +234,17 @@ async function handleResponse<T>(res: Response): Promise<T> {
 export async function getMeApi(): Promise<UserMeResponse> {
   const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/me`);
   return handleResponse<UserMeResponse>(res);
+}
+
+export async function updateMeApi(
+  payload: UpdateMeRequest
+): Promise<{ user: UserMeResponse["user"] }> {
+  const res = await authenticatedFetch(`${API_BASE_URL}/api/v1/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<{ user: UserMeResponse["user"] }>(res);
 }
 
 export async function searchOrganizationsApi(query: string): Promise<OrganizationSummary[]> {
@@ -364,6 +382,97 @@ export async function createMilestoneApi(
   });
   const data = await handleResponse<{ milestone: Milestone }>(res);
   return data.milestone;
+}
+
+export async function submitMilestoneApi(
+  ticketId: string,
+  milestoneId: string
+): Promise<Milestone> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/submit`,
+    { method: "POST" }
+  );
+  const data = await handleResponse<{ milestone: Milestone }>(res);
+  return data.milestone;
+}
+
+export async function confirmMilestoneApi(
+  ticketId: string,
+  milestoneId: string
+): Promise<Milestone> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/confirm`,
+    { method: "POST" }
+  );
+  const data = await handleResponse<{ milestone: Milestone }>(res);
+  return data.milestone;
+}
+
+export async function rejectMilestoneApi(
+  ticketId: string,
+  milestoneId: string,
+  rejectionNote: string
+): Promise<Milestone> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/reject`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rejectionNote }),
+    }
+  );
+  const data = await handleResponse<{ milestone: Milestone }>(res);
+  return data.milestone;
+}
+
+export async function releaseMilestoneFundsApi(
+  ticketId: string,
+  milestoneId: string
+): Promise<Milestone> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/release`,
+    { method: "POST" }
+  );
+  const data = await handleResponse<{ milestone: Milestone }>(res);
+  return data.milestone;
+}
+
+export interface EvidenceFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  url?: string;
+  createdAt: string;
+}
+
+export async function uploadMilestoneEvidenceApi(
+  ticketId: string,
+  milestoneId: string,
+  file: File
+): Promise<EvidenceFile> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/evidence`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+  return handleResponse<EvidenceFile>(res);
+}
+
+export async function listMilestoneEvidenceApi(
+  ticketId: string,
+  milestoneId: string
+): Promise<EvidenceFile[]> {
+  const res = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/tickets/${ticketId}/milestones/${milestoneId}/evidence`
+  );
+  const data = await handleResponse<{ evidence: EvidenceFile[] }>(res);
+  return data.evidence;
 }
 
 export interface TicketPdfDownload {

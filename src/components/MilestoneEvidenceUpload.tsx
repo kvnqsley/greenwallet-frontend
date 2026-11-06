@@ -2,6 +2,7 @@
 // Allows suppliers to upload evidence files for milestone completion
 
 import { useState, useRef } from "react";
+import { uploadMilestoneEvidenceApi, submitMilestoneApi } from "../api/tickets";
 
 interface EvidenceFile {
   id: string;
@@ -78,12 +79,11 @@ export function MilestoneEvidenceUpload({
     setError(null);
 
     try {
-      // Upload each file
-      for (const file of files) {
-        if (!file.url) {
-          // In production, this would upload to the backend
-          // For now, we'll simulate the upload
-          console.log(`Uploading file: ${file.name}`);
+      // Get the actual file objects from the file input
+      const fileInput = fileInputRef.current;
+      if (fileInput && fileInput.files) {
+        for (const file of Array.from(fileInput.files)) {
+          await uploadMilestoneEvidenceApi(ticketId, milestoneId, file);
         }
       }
 
@@ -106,18 +106,7 @@ export function MilestoneEvidenceUpload({
     setError(null);
 
     try {
-      // Submit milestone to backend
-      const response = await fetch(`/api/v1/tickets/${ticketId}/milestones/${milestoneId}/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Idempotency-Key": `${ticketId}-${milestoneId}-${Date.now()}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit milestone");
-      }
+      await submitMilestoneApi(ticketId, milestoneId);
 
       setSuccess(true);
       onUploadComplete?.();
@@ -166,7 +155,6 @@ export function MilestoneEvidenceUpload({
           htmlFor={`evidence-upload-${milestoneId}`}
           className="upload-label"
         >
-          <span className="upload-icon">📁</span>
           <span>Click to select files or drag and drop</span>
           <span className="upload-hint">JPEG, PNG, WebP, PDF up to 10MB</span>
         </label>
@@ -196,14 +184,7 @@ export function MilestoneEvidenceUpload({
       )}
 
       <div className="upload-actions">
-        <button
-          type="button"
-          onClick={handleUpload}
-          disabled={files.length === 0 || uploading || submitting}
-          className="btn btn-secondary"
-        >
-          {uploading ? "Uploading..." : "Upload Evidence"}
-        </button>
+
 
         <button
           type="button"

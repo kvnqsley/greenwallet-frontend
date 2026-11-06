@@ -23,6 +23,7 @@ import {
   WorkspaceNavigation,
   formatStatusBadge,
 } from "./TradeTicketsPage";
+import { MilestoneList } from "./components/MilestoneList";
 
 type TicketDecision = "accepted" | "rejected";
 
@@ -41,11 +42,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
       </a>
       <WorkspaceHeader onSignOut={handleSignOut} />
       <div className="workspace-layout">
-        <WorkspaceNavigation
-          onProfile={() =>
-            alert("Open your trade tickets to manage your workspace profile.")
-          }
-        />
+        <WorkspaceNavigation current="tickets" />
         <main className="workspace-main ticket-flow-main" id="workspace-main">
           {children}
         </main>
@@ -96,9 +93,9 @@ function TicketDetails({
   const membership = findMembership(me, ticket);
   const party = membership
     ? ticket.parties.find(
-        (candidate) =>
-          candidate.organizationId === membership.organization.id
-      )
+      (candidate) =>
+        candidate.organizationId === membership.organization.id
+    )
     : null;
   const counterparty = ticket.parties.find(
     (candidate) =>
@@ -218,9 +215,8 @@ function StatusNotice({
 }) {
   return (
     <p
-      className={`ticket-flow-disclaimer ticket-flow-notice${
-        tone === "error" ? " is-error" : ""
-      }`}
+      className={`ticket-flow-disclaimer ticket-flow-notice${tone === "error" ? " is-error" : ""
+        }`}
       role={tone === "error" ? "alert" : "status"}
     >
       {children}
@@ -344,8 +340,8 @@ export function ReviewTradeTicketPage({ ticketId }: { ticketId: string }) {
   const organizationId = membership?.organization.id;
   const myParty = organizationId
     ? ticket.parties.find(
-        (party) => party.organizationId === organizationId
-      )
+      (party) => party.organizationId === organizationId
+    )
     : null;
   const isBuyer = organizationId === ticket.buyerOrgId;
   const isSupplier = organizationId === ticket.supplierOrgId;
@@ -456,8 +452,8 @@ export function ReviewTradeTicketPage({ ticketId }: { ticketId: string }) {
       }
       setActionError(
         result.blockedReason ||
-          result.charge?.failureReason ||
-          "Funding could not be started yet."
+        result.charge?.failureReason ||
+        "Funding could not be started yet."
       );
     } catch (fundError) {
       setActionError(
@@ -576,6 +572,22 @@ export function ReviewTradeTicketPage({ ticketId }: { ticketId: string }) {
         </div>
 
         <TicketDetails ticket={ticket} me={me} />
+
+        {ticket.milestones && ticket.milestones.length > 0 && ticket.status === "FUNDED" && (
+          <section className="milestone-management-section" aria-labelledby="milestones-title">
+            <h2 id="milestones-title">Milestone Management</h2>
+            <MilestoneList
+              milestones={ticket.milestones}
+              ticketId={ticket.id}
+              ticketStatus={ticket.status}
+              userRole={isBuyer ? "BUYER" : isSupplier ? "SUPPLIER" : undefined}
+              onMilestoneUpdate={() => {
+                // Refresh ticket data when milestone is updated
+                getTicketApi(ticket.id).then(setTicket).catch(console.error);
+              }}
+            />
+          </section>
+        )}
 
         {actionError && <StatusNotice tone="error">{actionError}</StatusNotice>}
         {shareNotice && <StatusNotice>{shareNotice}</StatusNotice>}
@@ -833,8 +845,8 @@ export function TradeDecisionResultPage({
       }
       setActionError(
         result.blockedReason ||
-          result.charge?.failureReason ||
-          "Funding could not be started yet."
+        result.charge?.failureReason ||
+        "Funding could not be started yet."
       );
     } catch (fundError) {
       setActionError(

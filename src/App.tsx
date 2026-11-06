@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { AuthPage, isAuthPath } from "./AuthPages";
 import { IdentityVerificationPage } from "./IdentityVerificationPage";
 import { isIdentityVerified } from "./identity";
+import { ProfilePage } from "./ProfilePage";
 import { RecordTradePage } from "./RecordTradePage";
 import {
   PaymentCallbackPage,
   ReviewTradeTicketPage,
   TradeDecisionResultPage,
 } from "./TicketFlowPages";
-import { TradeTicketDetailsPage } from "./TradeTicketDetailsPage";
 import { TradeTicketsPage } from "./TradeTicketsPage";
 
 const ASSETS = "/assets/";
@@ -482,24 +482,6 @@ export function App() {
     );
   }
 
-  if (path === "/trade-tickets/details") {
-    if (!isIdentityVerified()) {
-      return (
-        <>
-          <IdentityVerificationPage returnTo="/trade-tickets/details" />
-          <NetworkStatus />
-        </>
-      );
-    }
-
-    return (
-      <>
-        <TradeTicketDetailsPage />
-        <NetworkStatus />
-      </>
-    );
-  }
-
   if (path === "/trade-tickets/review") {
     return (
       <>
@@ -540,6 +522,15 @@ export function App() {
     return (
       <>
         <TradeTicketsPage />
+        <NetworkStatus />
+      </>
+    );
+  }
+
+  if (path === "/profile") {
+    return (
+      <>
+        <ProfilePage />
         <NetworkStatus />
       </>
     );

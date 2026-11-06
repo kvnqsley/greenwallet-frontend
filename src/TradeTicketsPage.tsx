@@ -1,10 +1,5 @@
 ﻿import { useState, useEffect } from "react";
-import {
-  listTicketsApi,
-  type Ticket,
-  type UserMeResponse,
-  getMeApi,
-} from "./api/tickets";
+import { listTicketsApi, type Ticket } from "./api/tickets";
 import { authStorage } from "./api/auth";
 
 export function WorkspaceHeader({
@@ -31,28 +26,28 @@ export function WorkspaceHeader({
 }
 
 export function WorkspaceNavigation({
-  onProfile,
+  current = "tickets",
 }: {
-  onProfile: () => void;
+  current?: "tickets" | "profile";
 }) {
   return (
     <nav className="workspace-sidebar" aria-label="Workspace navigation">
       <a
-        className="workspace-nav-link is-current"
+        className={`workspace-nav-link${current === "tickets" ? " is-current" : ""}`}
         href="/trade-tickets"
-        aria-current="page"
+        aria-current={current === "tickets" ? "page" : undefined}
       >
         <img src="/assets/icon-confirmation-number.svg" alt="" />
         <span>Trade tickets</span>
       </a>
-      <button
-        className="workspace-nav-link"
-        type="button"
-        onClick={onProfile}
+      <a
+        className={`workspace-nav-link${current === "profile" ? " is-current" : ""}`}
+        href="/profile"
+        aria-current={current === "profile" ? "page" : undefined}
       >
         <img src="/assets/icon-person.svg" alt="" />
         <span>Profile</span>
-      </button>
+      </a>
     </nav>
   );
 }
@@ -86,14 +81,6 @@ export function TradeTicketsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchCommodity, setSearchCommodity] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [me, setMe] = useState<UserMeResponse | null>(null);
-
-  useEffect(() => {
-    // Fetch current user and org context
-    getMeApi()
-      .then((data) => setMe(data))
-      .catch(() => { });
-  }, []);
 
   useEffect(() => {
     fetchTickets();
@@ -125,7 +112,7 @@ export function TradeTicketsPage() {
   }
 
   function openTicket(id: string) {
-    window.location.href = `/trade-tickets/details?ticketId=${encodeURIComponent(id)}`;
+    window.location.href = `/trade-tickets/review?ticketId=${encodeURIComponent(id)}`;
   }
 
   function handleSignOut() {
@@ -140,16 +127,7 @@ export function TradeTicketsPage() {
       </a>
       <WorkspaceHeader onSignOut={handleSignOut} />
       <div className="workspace-layout">
-        <WorkspaceNavigation
-          onProfile={() =>
-            alert(
-              me?.user
-                ? `Signed in as: ${me.user.name} (${me.user.email})\nOrganization: ${me.memberships[0]?.organization?.name || "None"
-                }`
-                : "No active profile found."
-            )
-          }
-        />
+        <WorkspaceNavigation current="tickets" />
         <main className="workspace-main" id="workspace-main">
           <section className="workspace-intro" aria-labelledby="workspace-title">
             <p className="workspace-eyebrow">Agricultural trade Nigeria</p>

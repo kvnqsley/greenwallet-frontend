@@ -2830,3 +2830,522 @@ a:focus-visible, button:focus-visible { outline: 3px solid #eeef00; outline-offs
   background: white;
   border-radius: 8px;
 }
+/* Milestone Management Styles */
+.milestone-management-section {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.milestone-management-section h2 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.milestone-list {
+  display: grid;
+  gap: 24px;
+}
+
+.milestone-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.milestone-progress-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.milestone-progress-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.progress-amount {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.progress-amount .released {
+  font-weight: 600;
+  color: var(--green);
+}
+
+.progress-amount .separator {
+  margin: 0 4px;
+}
+
+.progress-amount .total {
+  font-weight: 500;
+}
+
+.progress-amount .label {
+  margin-left: 4px;
+}
+
+.milestone-progress-bar {
+  height: 8px;
+  background: #e5e5e5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.milestone-status-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.milestone-status-summary .ticket-badge {
+  margin-right: 8px;
+}
+
+.milestones-container {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.milestone-card {
+  padding: 20px;
+  border: 1px solid #e5e5e5;
+  background: white;
+}
+
+.milestone-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.milestone-sequence {
+  flex-shrink: 0;
+}
+
+.sequence-number {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  background: #f4f6f1;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.milestone-title-area {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.milestone-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.milestone-amount {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.milestone-description {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.milestone-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.meta-item {
+  display: flex;
+  gap: 6px;
+}
+
+.meta-label {
+  color: var(--muted);
+}
+
+.meta-value {
+  font-weight: 500;
+}
+
+.rejection-notice {
+  margin-top: 16px;
+  padding: 12px;
+  background: #fee2e2;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #991b1b;
+}
+
+.milestone-evidence {
+  margin-top: 16px;
+}
+
+.evidence-header {
+  margin-bottom: 8px;
+}
+
+.evidence-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.evidence-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.evidence-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #f4f6f1;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.evidence-more {
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.milestone-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.btn-secondary {
+  background: white;
+  border-color: #e5e5e5;
+  color: var(--ink);
+}
+
+.btn-secondary:hover {
+  background: #f4f6f1;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--green-deep);
+}
+
+.completed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.no-milestones {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* Evidence Upload */
+.evidence-upload-area {
+  margin-top: 16px;
+  padding: 20px;
+  border: 2px dashed #e5e5e5;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.evidence-upload-area.drag-over {
+  border-color: var(--green);
+  background: #f4f6f1;
+}
+
+.evidence-upload-input {
+  display: none;
+}
+
+.evidence-upload-label {
+  display: block;
+  cursor: pointer;
+}
+
+.evidence-upload-label span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.evidence-file-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.evidence-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #fbfbfb;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+}
+
+.evidence-file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.evidence-file-size {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.evidence-remove-btn {
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: #dc2626;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.evidence-upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Approval Modal */
+.approval-modal-content {
+  display: grid;
+  gap: 20px;
+}
+
+.approval-section h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.approval-evidence-list {
+  display: grid;
+  gap: 8px;
+}
+
+.approval-evidence-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f4f6f1;
+  border-radius: 4px;
+}
+
+.approval-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.approval-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .milestone-header {
+    flex-wrap: wrap;
+  }
+
+  .milestone-title-area {
+    order: 3;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .milestone-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .milestone-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+/* Profile */
+.profile-main { width: min(882px, calc(100% - 120px)); margin: 58px 0 80px 74px; }
+.profile-page .workspace-intro .workspace-eyebrow { margin-bottom: 16px; }
+.profile-section {
+  display: grid;
+  gap: 22px;
+  margin-top: 40px;
+  padding: 24px;
+  border: 1px solid #e5e5e5;
+}
+.profile-section-header { display: grid; gap: 4px; }
+.profile-section-header h2 {
+  margin: 0;
+  color: rgb(29 29 29 / 90%);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  line-height: 1.4;
+}
+.profile-section-header p {
+  margin: 0;
+  color: rgb(29 29 29 / 64%);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.profile-form { display: grid; gap: 24px; }
+.profile-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.profile-field-grid .record-trade-field > input[disabled] {
+  background: #f7f7f5;
+  color: rgb(29 29 29 / 64%);
+  cursor: not-allowed;
+}
+.profile-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5e5;
+}
+.profile-meta div { display: grid; gap: 6px; }
+.profile-meta dt { color: rgb(29 29 29 / 62%); font-size: 13px; }
+.profile-meta dd { margin: 0; color: var(--ink); font-size: 15px; font-weight: 500; }
+.profile-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+.profile-actions .identity-submit { width: auto; min-width: 180px; }
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: #f1f1ef;
+  color: rgb(29 29 29 / 72%);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.profile-badge.is-verified { background: #e6f0e4; color: var(--green-deep); }
+.profile-badge.is-pending { background: #fbf1dc; color: #8a6413; }
+.profile-badge.is-rejected { background: #f7e3e1; color: #8e3f36; }
+.profile-org-grid { margin-top: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.profile-org-card { display: grid; gap: 12px; }
+.profile-org-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.profile-org-heading h3 {
+  margin: 0;
+  color: rgb(29 29 29 / 90%);
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.profile-org-meta {
+  margin: 0 !important;
+  color: rgb(29 29 29 / 64%) !important;
+  font-size: 14px !important;
+}
+.profile-role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.profile-role-list li {
+  padding: 4px 10px;
+  border: 1px solid #e5e5e5;
+  color: rgb(29 29 29 / 78%);
+  font-size: 12px;
+  font-weight: 550;
+}
+.profile-empty { margin: 0; color: var(--muted); font-size: 14px; }
+.profile-error { margin-top: 24px; }
+
+@media (max-width: 760px) {
+  .profile-main { width: min(100% - 40px, 650px); margin: 38px auto 60px; }
+  .profile-field-grid, .profile-meta, .profile-org-grid { grid-template-columns: 1fr; }
+  .profile-section { padding: 20px; }
+}
+
+@media (max-width: 380px) {
+  .profile-main { width: calc(100% - 32px); }
+  .profile-actions .identity-submit { width: 100%; }
+}

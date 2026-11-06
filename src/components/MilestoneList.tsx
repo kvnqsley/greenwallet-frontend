@@ -7,8 +7,8 @@ import type { Milestone as ApiMilestone } from "../api/tickets";
 interface MilestoneListProps {
   milestones: ApiMilestone[];
   ticketId: string;
-  userRole: "SUPPLIER" | "BUYER";
   ticketStatus: string;
+  userRole?: "SUPPLIER" | "BUYER";
   onMilestoneUpdate?: () => void;
 }
 
@@ -80,20 +80,20 @@ export function MilestoneList({
       </div>
 
       <div className="milestone-status-summary">
-        <span className="status-item status-pending">
+        <span className="ticket-badge ticket-badge-draft">
           {statusCounts.PENDING} Pending
         </span>
-        <span className="status-item status-submitted">
+        <span className="ticket-badge ticket-badge-awaiting">
           {statusCounts.SUBMITTED} Awaiting Review
         </span>
-        <span className="status-item status-confirmed">
+        <span className="ticket-badge ticket-badge-active">
           {statusCounts.CONFIRMED} Ready
         </span>
-        <span className="status-item status-released">
+        <span className="ticket-badge ticket-badge-funded">
           {statusCounts.RELEASED} Released
         </span>
         {statusCounts.REJECTED > 0 && (
-          <span className="status-item status-rejected">
+          <span className="ticket-badge ticket-badge-cancelled">
             {statusCounts.REJECTED} Needs Attention
           </span>
         )}

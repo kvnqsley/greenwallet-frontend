@@ -9,8 +9,6 @@ import { WorkspaceHeader, WorkspaceNavigation } from "./TradeTicketsPage";
 
 const signOutNotice =
   "There is no signed-in account in this preview. Use the GreenWallet logo to return home.";
-const profileNotice =
-  "Profile management is not connected in this preview. No account details are available.";
 
 function formatNin(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -97,7 +95,7 @@ export function IdentityVerificationPage({
       </a>
       <WorkspaceHeader onSignOut={() => setNotice(signOutNotice)} />
       <div className="workspace-layout">
-        <WorkspaceNavigation onProfile={() => setNotice(profileNotice)} />
+        <WorkspaceNavigation current="tickets" />
         <main className="workspace-main identity-main" id="workspace-main">
           <div className="identity-layout">
             <section
